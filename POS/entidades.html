@@ -28,13 +28,13 @@
     <h1>Gestión de entidades</h1>
     <p class="subtitle">Crea, edita, busca y elimina categorías, proveedores y clientes para mantener tu negocio organizado.</p>
   </section>
-
+ 
   <div class="tab-bar">
     <button type="button" class="tab-button active" data-panel="categorias-panel">Categorías</button>
     <button type="button" class="tab-button" data-panel="proveedores-panel">Proveedores</button>
     <button type="button" class="tab-button" data-panel="clientes-panel">Clientes</button>
   </div>
-
+ 
   <div id="categorias-panel" class="tab-panel active">
     <div class="form-grid">
       <input id="categoria-nombre" placeholder="Nombre de la categoría">
@@ -48,7 +48,7 @@
     <input id="categoria-buscar" placeholder="Buscar categoría">
     <div id="categorias-list" class="entity-grid"></div>
   </div>
-
+ 
   <div id="proveedores-panel" class="tab-panel">
     <div class="form-grid">
       <input id="proveedor-nombre" placeholder="Nombre del proveedor">
@@ -63,7 +63,7 @@
     <input id="proveedor-buscar" placeholder="Buscar proveedor">
     <div id="proveedores-list" class="entity-grid"></div>
   </div>
-
+ 
   <div id="clientes-panel" class="tab-panel">
     <div class="form-grid">
       <input id="cliente-nombre" placeholder="Nombre del cliente">
@@ -80,12 +80,15 @@
     <div id="clientes-list" class="entity-grid"></div>
   </div>
 </main>
-
+ 
 <footer>
   <p>© 2026 Papel y Luna. Todos los derechos reservados.</p>
 </footer>
-
+ 
+<script src="auth.js"></script>
+<script>Auth.requireLogin();</script>
 <script src="data.js"></script>
 <script src="entidades.js"></script>
 </body>
 </html>
+

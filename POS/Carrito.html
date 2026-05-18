@@ -23,30 +23,30 @@
     <div id="user-badge" class="user-badge"></div>
   </nav>
 </header>
-
+ 
 <main class="contenedor-form">
   <section class="page-intro">
     <h1>Venta en curso</h1>
     <p class="subtitle">Confirma los productos del carrito, elige el método de pago y finaliza la venta.</p>
   </section>
-
+ 
   <div class="carrito-grid">
     <div class="panel-card">
       <div id="mensaje" class="mensaje"></div>
       <div id="carrito-lista"></div>
     </div>
-
+ 
     <aside class="carrito-sidebar">
       <div class="panel-card">
         <h2>Resumen de pago</h2>
         <p>Total: <strong id="total-carrito">$0</strong></p>
-
+ 
         <!-- NUEVO: Selector de cliente -->
         <label for="cliente-select">Cliente</label>
         <select id="cliente-select">
           <option value="">— Sin cliente —</option>
         </select>
-
+ 
         <label for="metodo">Método de pago</label>
         <select id="metodo">
           <option value="">Seleccione método de pago</option>
@@ -54,7 +54,7 @@
           <option value="Nequi">Nequi</option>
           <option value="tarjeta">Tarjeta</option>
         </select>
-
+ 
         <div id="efectivo-box" style="display:none">
           <input type="number" id="recibido" placeholder="Valor recibido">
           <p>Cambio: <span id="cambio">$0</span></p>
@@ -62,9 +62,9 @@
       </div>
     </aside>
   </div>
-
+ 
   <div id="estado-venta" class="open-sale-banner oculto"></div>
-
+ 
   <div class="acciones">
     <button id="guardar-venta" type="button" class="btn btn-secondary">Guardar venta abierta</button>
     <button id="cerrar" class="btn btn-primary">Cerrar venta</button>
@@ -72,13 +72,15 @@
     <button id="volver" onclick="window.location.href='PapelLuna.html'" class="btn btn-secondary">Volver al catálogo</button>
   </div>
 </main>
-
+ 
 <footer>
   <p>© 2026 Papel y Luna. Todos los derechos reservados.</p>
   <p><strong>Dirección:</strong> Calle 10 #5-35, Chía, Cundinamarca</p>
   <p><strong>Teléfono:</strong> 350 884 1010</p>
 </footer>
-
+ 
+<script src="auth.js"></script>
+<script>Auth.requireLogin();</script>
 <script src="data.js"></script>
 <script src="Carrito.js"></script>
 </body>

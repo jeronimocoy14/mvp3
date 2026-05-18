@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
+ 
 <header class="app-header">
   <div class="header-brand">
     <img src="Logo.png" alt="Papel y Luna" class="logo">
@@ -29,21 +29,21 @@
     <div id="user-badge" class="user-badge"></div>
   </nav>
 </header>
-
+ 
 <main>
   <section class="page-intro">
     <h2>Catálogo de productos</h2>
     <p class="subtitle">Escribe el nombre o la categoría para filtrar y comienza la venta con un solo clic.</p>
   </section>
-
+ 
   <!-- Panel de ventas abiertas: muestra TODAS las sesiones guardadas -->
   <div id="venta-abierta-banner" class="open-sale-banner oculto"></div>
-
+ 
   <input type="text" id="buscador" placeholder="Buscar producto o categoría">
   <div id="catalogo" class="grid"></div>
   <div id="mensaje"></div>
 </main>
-
+ 
 <footer>
   <p>© 2026 Papel y Luna. Todos los derechos reservados.</p>
   <p><strong>Dirección:</strong> Calle 10 #5-35, Chía, Cundinamarca</p>
@@ -52,7 +52,9 @@
   <p>Lunes a viernes: 7:00 a.m. – 8:00 p.m.</p>
   <p>Sábados y domingos: 9:00 a.m. – 6:00 p.m.</p>
 </footer>
-
+ 
+<script src="auth.js"></script>
+<script>Auth.requireLogin();</script>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>

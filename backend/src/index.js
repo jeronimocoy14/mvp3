@@ -5,13 +5,29 @@ const bcrypt  = require('bcryptjs');
 
 const app = express();
 
+// ── CORS: permite el frontend desde cualquier origen local ────
+const origenesPermitidos = [
+  process.env.FRONTEND_URL,
+  'http://127.0.0.1:5500',
+  'http://localhost:5500',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+].filter(Boolean);
+
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://127.0.0.1:5500',
-    'http://localhost:5500',
-    'http://localhost:3000',
-  ],
-  credentials: true
+  origin: function(origin, callback) {
+    // Permitir peticiones sin origin (archivos locales, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (origenesPermitidos.includes(origin)) return callback(null, true);
+    // En desarrollo, permitir cualquier localhost / 127.0.0.1
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS no permitido para: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
@@ -22,7 +38,10 @@ app.use('/api/auth',      require('./routes/auth'));
 app.use('/api/productos', require('./routes/productos'));
 app.use('/api/ventas',    require('./routes/ventas'));
 app.use('/api/compras',   require('./routes/compras'));
-app.use('/api',           require('./routes/entidades'));   // /api/categorias, /api/proveedores, /api/clientes
+app.use('/api',           require('./routes/entidades'));  // /api/categorias, /api/proveedores, /api/clientes
+
+// Ruta dummy para /api/carrito (el frontend la llama pero no es crítica)
+app.post('/api/carrito', (req, res) => res.json({ success: true }));
 
 app.get('/health', (_, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
@@ -59,6 +78,7 @@ app.listen(PORT, async () => {
   GET    /api/productos
   POST   /api/productos
   PUT    /api/productos/:id
+  PATCH  /api/productos/:id/stock
   DELETE /api/productos/:id
   GET    /api/ventas
   POST   /api/ventas
