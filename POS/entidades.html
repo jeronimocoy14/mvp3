@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Entidades - Papel y Luna</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="header-brand">
+    <img src="Logo.png" alt="Papel y Luna" class="logo">
+    <div>
+      <h1>Papel y Luna</h1>
+      <p class="subtitle">Gestiona categorías, proveedores y clientes en un solo lugar.</p>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <a href="PapelLuna.html" class="btn btn-link">Nueva venta</a>
+    <a href="productos.html" class="btn btn-link">Productos</a>
+    <a href="historial.html" class="btn btn-link">Historial</a>
+    <a href="compras.html" class="btn btn-link">Compras</a>
+    <a href="entidades.html" class="btn btn-secondary">Entidades</a>
+    <div id="user-badge" class="user-badge"></div>
+  </nav>
+</header>
+<main class="contenedor-form">
+  <section class="page-intro">
+    <h1>Gestión de entidades</h1>
+    <p class="subtitle">Crea, edita, busca y elimina categorías, proveedores y clientes para mantener tu negocio organizado.</p>
+  </section>
+
+  <div class="tab-bar">
+    <button type="button" class="tab-button active" data-panel="categorias-panel">Categorías</button>
+    <button type="button" class="tab-button" data-panel="proveedores-panel">Proveedores</button>
+    <button type="button" class="tab-button" data-panel="clientes-panel">Clientes</button>
+  </div>
+
+  <div id="categorias-panel" class="tab-panel active">
+    <div class="form-grid">
+      <input id="categoria-nombre" placeholder="Nombre de la categoría">
+      <input id="categoria-descripcion" placeholder="Descripción breve">
+      <input type="hidden" id="categoria-id">
+    </div>
+    <div class="form-row">
+      <button id="categoria-guardar" class="btn btn-primary">Guardar categoría</button>
+      <button id="categoria-limpiar" class="btn btn-secondary">Limpiar</button>
+    </div>
+    <input id="categoria-buscar" placeholder="Buscar categoría">
+    <div id="categorias-list" class="entity-grid"></div>
+  </div>
+
+  <div id="proveedores-panel" class="tab-panel">
+    <div class="form-grid">
+      <input id="proveedor-nombre" placeholder="Nombre del proveedor">
+      <input id="proveedor-contacto" placeholder="Contacto">
+      <input id="proveedor-telefono" placeholder="Teléfono">
+      <input type="hidden" id="proveedor-id">
+    </div>
+    <div class="form-row">
+      <button id="proveedor-guardar" class="btn btn-primary">Guardar proveedor</button>
+      <button id="proveedor-limpiar" class="btn btn-secondary">Limpiar</button>
+    </div>
+    <input id="proveedor-buscar" placeholder="Buscar proveedor">
+    <div id="proveedores-list" class="entity-grid"></div>
+  </div>
+
+  <div id="clientes-panel" class="tab-panel">
+    <div class="form-grid">
+      <input id="cliente-nombre" placeholder="Nombre del cliente">
+      <input id="cliente-documento" placeholder="Documento">
+      <input id="cliente-correo" placeholder="Correo electrónico">
+      <input id="cliente-telefono" placeholder="Teléfono">
+      <input type="hidden" id="cliente-id">
+    </div>
+    <div class="form-row">
+      <button id="cliente-guardar" class="btn btn-primary">Guardar cliente</button>
+      <button id="cliente-limpiar" class="btn btn-secondary">Limpiar</button>
+    </div>
+    <input id="cliente-buscar" placeholder="Buscar cliente">
+    <div id="clientes-list" class="entity-grid"></div>
+  </div>
+</main>
+
+<footer>
+  <p>© 2026 Papel y Luna. Todos los derechos reservados.</p>
+</footer>
+
+<script src="data.js"></script>
+<script src="entidades.js"></script>
+</body>
+</html>

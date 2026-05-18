@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Historial de ventas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="header-brand">
+    <img src="Logo.png" alt="Papel y Luna" class="logo">
+    <div>
+      <h1>Papel y Luna</h1>
+      <p class="subtitle">Revisa ventas anteriores y regresa al punto de venta con facilidad.</p>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <a href="PapelLuna.html" class="btn btn-link">Nueva venta</a>
+    <a href="productos.html" class="btn btn-link">Productos</a>
+    <a href="historial.html" class="btn btn-link">Historial</a>
+    <a href="compras.html" class="btn btn-link">Compras</a>
+    <a href="entidades.html" class="btn btn-link">Entidades</a>
+    <div id="user-badge" class="user-badge"></div>
+  </nav>
+</header>
+
+<main class="contenedor-form">
+  <section class="page-intro">
+    <h1>Historial de ventas</h1>
+    <p class="subtitle">Busca las ventas anteriores y consulta los detalles de manera rápida.</p>
+  </section>
+
+  <div id="mensaje" class="mensaje"></div>
+  <div id="ventas"></div>
+  <div class="footer-links">
+    <button id="volver" class="btn btn-secondary">Volver a la página principal</button>
+  </div>
+</main>
+
+<footer>
+    <p>© 2026 Papel y Luna. Todos los derechos reservados.</p>
+    <p><strong>Dirección:</strong> Calle 10 #5-35, Chía, Cundinamarca</p>
+    <p><strong>Teléfono:</strong> 350 884 1010</p>
+    <p><strong>Horarios:</strong></p>
+    <p>Lunes a viernes: 7:00 a.m. – 8:00 p.m.</p>
+    <p>Sábados y domingos: 9:00 a.m. – 6:00 p.m.</p>
+</footer>
+
+<script src="auth.js"></script>
+<script>Auth.requireLogin();</script>
+<script src="data.js"></script>
+<script src="historial.js"></script>
+</body>
+</html>

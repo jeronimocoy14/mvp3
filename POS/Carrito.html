@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Venta en curso - Papel y Luna</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="header-brand">
+    <img src="Logo.png" alt="Papel y Luna" class="logo">
+    <div>
+      <h1>Papel y Luna</h1>
+      <p class="subtitle">Revisa tu carrito, selecciona método de pago y cierra la venta de forma segura.</p>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <a href="PapelLuna.html" class="btn btn-link">Nueva venta</a>
+    <a href="productos.html" class="btn btn-link">Productos</a>
+    <a href="historial.html" class="btn btn-link">Historial</a>
+    <a href="compras.html" class="btn btn-link">Compras</a>
+    <a href="entidades.html" class="btn btn-link">Entidades</a>
+    <div id="user-badge" class="user-badge"></div>
+  </nav>
+</header>
+
+<main class="contenedor-form">
+  <section class="page-intro">
+    <h1>Venta en curso</h1>
+    <p class="subtitle">Confirma los productos del carrito, elige el método de pago y finaliza la venta.</p>
+  </section>
+
+  <div class="carrito-grid">
+    <div class="panel-card">
+      <div id="mensaje" class="mensaje"></div>
+      <div id="carrito-lista"></div>
+    </div>
+
+    <aside class="carrito-sidebar">
+      <div class="panel-card">
+        <h2>Resumen de pago</h2>
+        <p>Total: <strong id="total-carrito">$0</strong></p>
+
+        <!-- NUEVO: Selector de cliente -->
+        <label for="cliente-select">Cliente</label>
+        <select id="cliente-select">
+          <option value="">— Sin cliente —</option>
+        </select>
+
+        <label for="metodo">Método de pago</label>
+        <select id="metodo">
+          <option value="">Seleccione método de pago</option>
+          <option value="Efectivo">Efectivo</option>
+          <option value="Nequi">Nequi</option>
+          <option value="tarjeta">Tarjeta</option>
+        </select>
+
+        <div id="efectivo-box" style="display:none">
+          <input type="number" id="recibido" placeholder="Valor recibido">
+          <p>Cambio: <span id="cambio">$0</span></p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div id="estado-venta" class="open-sale-banner oculto"></div>
+
+  <div class="acciones">
+    <button id="guardar-venta" type="button" class="btn btn-secondary">Guardar venta abierta</button>
+    <button id="cerrar" class="btn btn-primary">Cerrar venta</button>
+    <button id="vaciar" onclick="vaciar_carrito()" class="btn btn-danger">Vaciar carrito</button>
+    <button id="volver" onclick="window.location.href='PapelLuna.html'" class="btn btn-secondary">Volver al catálogo</button>
+  </div>
+</main>
+
+<footer>
+  <p>© 2026 Papel y Luna. Todos los derechos reservados.</p>
+  <p><strong>Dirección:</strong> Calle 10 #5-35, Chía, Cundinamarca</p>
+  <p><strong>Teléfono:</strong> 350 884 1010</p>
+</footer>
+
+<script src="data.js"></script>
+<script src="Carrito.js"></script>
+</body>
+</html>

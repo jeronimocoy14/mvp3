@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Compras - Papel y Luna</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="header-brand">
+    <img src="Logo.png" alt="Papel y Luna" class="logo">
+    <div>
+      <h1>Papel y Luna</h1>
+      <p class="subtitle">Registra compras con costos, cantidades y proveedores.</p>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <a href="PapelLuna.html" class="btn btn-link">Nueva venta</a>
+    <a href="productos.html" class="btn btn-link">Productos</a>
+    <a href="historial.html" class="btn btn-link">Historial</a>
+    <a href="compras.html" class="btn btn-secondary">Compras</a>
+    <a href="entidades.html" class="btn btn-link">Entidades</a>
+    <div id="user-badge" class="user-badge"></div>
+  </nav>
+</header>
+<main class="contenedor-form">
+  <section class="page-intro">
+    <h1>Registro de compras</h1>
+    <p class="subtitle">Agrega productos y cantidades para registrar cada compra en el servicio externo.</p>
+  </section>
+
+  <div id="mensaje"></div>
+  <div class="form-grid">
+    <input list="productos-compra" id="producto-compra" placeholder="Producto" autocomplete="off">
+    <datalist id="productos-compra"></datalist>
+    <input id="cantidad-compra" type="number" placeholder="Cantidad" min="1">
+    <input id="costo-compra" type="number" placeholder="Costo unitario" min="0" step="0.01">
+    <input list="proveedores-compra" id="proveedor-compra" placeholder="Proveedor">
+    <datalist id="proveedores-compra"></datalist>
+    <input id="nota-compra" placeholder="Notas adicionales" type="text">
+  </div>
+
+  <div class="form-row">
+    <button id="agregar-compra" class="btn btn-primary">Agregar producto</button>
+    <button id="limpiar-compra" class="btn btn-secondary">Limpiar</button>
+  </div>
+
+  <div class="panel-card">
+    <h2>Resumen de compra</h2>
+    <table class="table-list" id="tabla-compra">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Cantidad</th>
+          <th>Costo</th>
+          <th>Subtotal</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p id="total-compra" class="subtitle">Total: $0</p>
+  </div>
+
+  <div class="acciones">
+    <button id="registrar-compra" class="btn btn-primary">Registrar compra</button>
+    <button id="vaciar-compra" class="btn btn-danger">Vaciar compra</button>
+    <button id="volver" class="btn btn-secondary" onclick="window.location.href='PapelLuna.html'">Volver al catálogo</button>
+  </div>
+</main>
+<footer>
+  <p>© 2026 Papel y Luna. Todos los derechos reservados.</p>
+</footer>
+<script src="data.js"></script>
+<script src="compras.js"></script>
+</body>
+</html>

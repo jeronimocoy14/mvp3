@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de productos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="header-brand">
+    <img src="Logo.png" alt="Papel y Luna" class="logo">
+    <div>
+      <h1>Papel y Luna</h1>
+      <p class="subtitle">Administra el catálogo con facilidad y mantén tu inventario siempre actualizado.</p>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <a href="PapelLuna.html" class="btn btn-link">Nueva venta</a>
+    <a href="productos.html" class="btn btn-link">Productos</a>
+    <a href="historial.html" class="btn btn-link">Historial</a>
+    <a href="Carrito.html"   class="btn btn-link">Carrito</a>
+    <a href="compras.html"   class="btn btn-link">Compras</a>
+    <a href="entidades.html" class="btn btn-link">Entidades</a>
+    <div id="user-badge" class="user-badge"></div>
+  </nav>
+</header>
+
+<main class="contenedor-form">
+  <section class="page-intro">
+    <h1>Gestión de productos</h1>
+    <p class="subtitle">Agrega nuevos artículos, edita precios y controla el stock desde un panel claro y eficiente.</p>
+  </section>
+
+  <div id="mensaje"></div>
+
+  <!-- Modal: todos los botones e input empiezan ocultos -->
+  <div id="modal-overlay" class="oculto">
+    <div class="modal-box">
+      <p id="modal-text"></p>
+      <input id="modal-input" type="text" class="oculto" />
+      <div class="modal-actions" id="modal-actions">
+        <button id="modal-cancel"   type="button" class="oculto">Cancelar</button>
+        <button id="modal-accept"   type="button" class="oculto">Aceptar</button>
+        <button id="modal-costo"    type="button" class="oculto">Editar Costo</button>
+        <button id="modal-precio"   type="button" class="oculto">Editar Precio</button>
+        <button id="modal-cancelar" type="button" class="oculto">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-grid">
+    <input id="nombre"    placeholder="Nombre del producto">
+    <input id="precio"    type="number" placeholder="Precio de venta">
+    <input id="stock"     type="number" placeholder="Stock inicial">
+    <input id="costo"     type="number" placeholder="Costo del producto">
+    <input list="categorias-datalist"  id="categoria" placeholder="Categoría">
+    <datalist id="categorias-datalist"></datalist>
+    <input list="proveedores-datalist" id="proveedor" placeholder="Proveedor">
+    <datalist id="proveedores-datalist"></datalist>
+    <input id="imagen" type="url" placeholder="URL de la imagen">
+  </div>
+
+  <div class="form-row">
+    <button class="btn btn-primary"   onclick="crear()">Crear producto</button>
+    <button class="btn btn-secondary" onclick="cancelar()">Cancelar</button>
+  </div>
+
+  <div id="lista"></div>
+
+  <div class="footer-links">
+    <button id="volver" class="btn btn-secondary">Volver a la página principal</button>
+  </div>
+</main>
+
+<script src="auth.js"></script>
+<script>Auth.requireLogin();</script>
+<script src="data.js"></script>
+<script src="productos.js"></script>
+</body>
+</html>

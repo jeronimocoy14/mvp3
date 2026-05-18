@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Papel y Luna — Iniciar sesión</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+
+    .login-card {
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 24px 60px rgba(16,24,40,0.12);
+      padding: 44px 40px;
+      width: min(92vw, 420px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .login-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .login-brand img  { width: 64px; border-radius: 16px; }
+    .login-brand h1   { font-size: 1.6rem; color: var(--color-primario); margin: 0; }
+    .login-brand p    { color: var(--texto-secundario); margin: 0; font-size: 0.9rem; }
+
+    .login-field      { display: flex; flex-direction: column; gap: 6px; }
+    .login-field label{ font-weight: 600; font-size: 0.9rem; color: var(--texto-principal); }
+    .login-field input{ margin: 0; }
+
+    #login-error {
+      background: #fff1f2;
+      border: 1px solid #fecdd3;
+      color: #be123c;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    #btn-login {
+      width: 100%;
+      padding: 15px;
+      font-size: 1rem;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #5c56ff, #3c8cff);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    #btn-login:hover    { filter: brightness(1.08); }
+    #btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .login-hint {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--texto-secundario);
+      margin-top: -8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-brand">
+      <img src="Logo.png" alt="Papel y Luna">
+      <h1>Papel y Luna</h1>
+      <p>Sistema POS — Inicia sesión para continuar</p>
+    </div>
+
+    <div id="login-error"></div>
+
+    <div class="login-field">
+      <label for="l-usuario">Usuario</label>
+      <input id="l-usuario" type="text" placeholder="admin / cajero" autocomplete="username">
+    </div>
+
+    <div class="login-field">
+      <label for="l-password">Contraseña</label>
+      <input id="l-password" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <button id="btn-login">Entrar</button>
+
+    <p class="login-hint">Credenciales por defecto: admin / admin123</p>
+  </div>
+
+  <script src="auth.js"></script>
+  <script>
+    // Si ya está logueado, redirigir directo
+    if (Auth.estaLogueado()) window.location.replace('PapelLuna.html');
+
+    const errorBox  = document.getElementById('login-error');
+    const btnLogin  = document.getElementById('btn-login');
+    const inputUser = document.getElementById('l-usuario');
+    const inputPass = document.getElementById('l-password');
+
+    function mostrarError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = 'block';
+    }
+
+    async function intentarLogin() {
+      errorBox.style.display = 'none';
+      const usuario  = inputUser.value.trim();
+      const password = inputPass.value;
+      if (!usuario || !password) { mostrarError('Completa todos los campos.'); return; }
+
+      btnLogin.disabled    = true;
+      btnLogin.textContent = 'Verificando...';
+
+      const ok = await Auth.login(usuario, password);
+      if (ok) {
+        window.location.replace('PapelLuna.html');
+      } else {
+        mostrarError('Usuario o contraseña incorrectos.');
+        btnLogin.disabled    = false;
+        btnLogin.textContent = 'Entrar';
+        inputPass.value      = '';
+        inputPass.focus();
+      }
+    }
+
+    btnLogin.addEventListener('click', intentarLogin);
+    [inputUser, inputPass].forEach(el =>
+      el.addEventListener('keydown', e => { if (e.key === 'Enter') intentarLogin(); })
+    );
+  </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Papel y Luna POS</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-brand">
+    <img src="Logo.png" alt="Papel y Luna" class="logo">
+    <div>
+      <h1>Papel y Luna</h1>
+      <p class="subtitle">Busca productos, agrega al carrito y procesa ventas rápidamente.</p>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <!-- Nueva venta siempre genera una sesión nueva (sin ?sesion) -->
+    <a href="PapelLuna.html" class="btn btn-link">Nueva venta</a>
+    <a href="productos.html" class="btn btn-link">Productos</a>
+    <a href="historial.html" class="btn btn-link">Historial</a>
+    <a href="compras.html"   class="btn btn-link">Compras</a>
+    <a href="entidades.html" class="btn btn-link">Entidades</a>
+    <!-- Este botón lleva al carrito de la sesión ACTUAL (la de esta pestaña) -->
+    <a href="#" onclick="verCarrito(); return false;" class="btn btn-secondary">
+      Venta en curso 🛒 (<span id="contador-carrito">0</span>)
+    </a>
+    <div id="user-badge" class="user-badge"></div>
+  </nav>
+</header>
+
+<main>
+  <section class="page-intro">
+    <h2>Catálogo de productos</h2>
+    <p class="subtitle">Escribe el nombre o la categoría para filtrar y comienza la venta con un solo clic.</p>
+  </section>
+
+  <!-- Panel de ventas abiertas: muestra TODAS las sesiones guardadas -->
+  <div id="venta-abierta-banner" class="open-sale-banner oculto"></div>
+
+  <input type="text" id="buscador" placeholder="Buscar producto o categoría">
+  <div id="catalogo" class="grid"></div>
+  <div id="mensaje"></div>
+</main>
+
+<footer>
+  <p>© 2026 Papel y Luna. Todos los derechos reservados.</p>
+  <p><strong>Dirección:</strong> Calle 10 #5-35, Chía, Cundinamarca</p>
+  <p><strong>Teléfono:</strong> 350 884 1010</p>
+  <p><strong>Horarios:</strong></p>
+  <p>Lunes a viernes: 7:00 a.m. – 8:00 p.m.</p>
+  <p>Sábados y domingos: 9:00 a.m. – 6:00 p.m.</p>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
