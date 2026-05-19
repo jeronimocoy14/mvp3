@@ -2,9 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
 const bcrypt  = require('bcryptjs');
-
+ 
 const app = express();
-
+ 
 // ── CORS: permite el frontend desde cualquier origen local ────
 const origenesPermitidos = [
   process.env.FRONTEND_URL,
@@ -13,7 +13,7 @@ const origenesPermitidos = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
 ].filter(Boolean);
-
+ 
 app.use(cors({
   origin: function(origin, callback) {
     // Permitir peticiones sin origin (archivos locales, curl, Postman)
@@ -29,28 +29,29 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
+ 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+ 
 // ── Rutas ────────────────────────────────────────────────────
-app.use('/api/auth',      require('./routes/auth'));
+app.use('/api/auth',       require('./routes/auth'));
+app.use('/api/descuentos', require('./routes/descuentos'));
 app.use('/api/productos', require('./routes/productos'));
 app.use('/api/ventas',    require('./routes/ventas'));
 app.use('/api/compras',   require('./routes/compras'));
 app.use('/api',           require('./routes/entidades'));  // /api/categorias, /api/proveedores, /api/clientes
-
+ 
 // Ruta dummy para /api/carrito (el frontend la llama pero no es crítica)
 app.post('/api/carrito', (req, res) => res.json({ success: true }));
-
+ 
 app.get('/health', (_, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
-
+ 
 app.use((req, res) => res.status(404).json({ success: false, message: `Ruta no encontrada: ${req.path}` }));
 app.use((err, req, res, next) => {
   console.error('Error no manejado:', err);
   res.status(500).json({ success: false, message: 'Error interno del servidor.' });
 });
-
+ 
 async function seedUsuarios() {
   const db = require('../config/db');
   const usuarios = [
@@ -69,7 +70,7 @@ async function seedUsuarios() {
     }
   }
 }
-
+ 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, async () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);

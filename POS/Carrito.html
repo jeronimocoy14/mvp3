@@ -2,10 +2,18 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Venta en curso - Papel y Luna</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .resumen-linea { display:flex; justify-content:space-between; margin:.3rem 0; font-size:.95rem; }
+    .resumen-linea.descuento-linea { color:#c62828; }
+    .resumen-linea.total-linea { font-size:1.15rem; font-weight:800; border-top:2px solid #eee; padding-top:.5rem; margin-top:.5rem; }
+    .desc-badge { display:inline-block; background:#fff3cd; color:#856404; border:1px solid #ffc107; border-radius:8px; padding:3px 10px; font-size:.82rem; font-weight:600; margin-left:.5rem; }
+  </style>
 </head>
 <body>
+ 
 <header class="app-header">
   <div class="header-brand">
     <img src="Logo.png" alt="Papel y Luna" class="logo">
@@ -15,11 +23,12 @@
     </div>
   </div>
   <nav class="header-nav">
-    <a href="PapelLuna.html" class="btn btn-link">Nueva venta</a>
-    <a href="productos.html" class="btn btn-link">Productos</a>
-    <a href="historial.html" class="btn btn-link">Historial</a>
-    <a href="compras.html" class="btn btn-link">Compras</a>
-    <a href="entidades.html" class="btn btn-link">Entidades</a>
+    <a href="PapelLuna.html"  class="btn btn-link">Nueva venta</a>
+    <a href="productos.html"  class="btn btn-link">Productos</a>
+    <a href="historial.html"  class="btn btn-link">Historial</a>
+    <a href="compras.html"    class="btn btn-link">Compras</a>
+    <a href="entidades.html"  class="btn btn-link">Entidades</a>
+    <a href="descuentos.html" class="btn btn-link">Descuentos</a>
     <div id="user-badge" class="user-badge"></div>
   </nav>
 </header>
@@ -27,7 +36,7 @@
 <main class="contenedor-form">
   <section class="page-intro">
     <h1>Venta en curso</h1>
-    <p class="subtitle">Confirma los productos del carrito, elige el método de pago y finaliza la venta.</p>
+    <p class="subtitle">Confirma los productos, elige el método de pago y finaliza la venta.</p>
   </section>
  
   <div class="carrito-grid">
@@ -39,15 +48,33 @@
     <aside class="carrito-sidebar">
       <div class="panel-card">
         <h2>Resumen de pago</h2>
-        <p>Total: <strong id="total-carrito">$0</strong></p>
  
-        <!-- NUEVO: Selector de cliente -->
+        <div class="resumen-linea">
+          <span>Subtotal</span>
+          <strong id="subtotal-carrito">$0</strong>
+        </div>
+        <div class="resumen-linea descuento-linea" id="linea-descuento" style="display:none">
+          <span>Descuento <span id="desc-badge-label" class="desc-badge"></span></span>
+          <strong id="valor-descuento">−$0</strong>
+        </div>
+        <div class="resumen-linea total-linea">
+          <span>Total</span>
+          <strong id="total-carrito">$0</strong>
+        </div>
+ 
+        <hr style="margin:.8rem 0;">
+ 
         <label for="cliente-select">Cliente</label>
         <select id="cliente-select">
           <option value="">— Sin cliente —</option>
         </select>
  
-        <label for="metodo">Método de pago</label>
+        <label for="descuento-select" style="margin-top:.7rem; display:block;">Descuento</label>
+        <select id="descuento-select">
+          <option value="">— Sin descuento —</option>
+        </select>
+ 
+        <label for="metodo" style="margin-top:.7rem; display:block;">Método de pago</label>
         <select id="metodo">
           <option value="">Seleccione método de pago</option>
           <option value="Efectivo">Efectivo</option>
@@ -55,9 +82,9 @@
           <option value="tarjeta">Tarjeta</option>
         </select>
  
-        <div id="efectivo-box" style="display:none">
+        <div id="efectivo-box" style="display:none; margin-top:.5rem;">
           <input type="number" id="recibido" placeholder="Valor recibido">
-          <p>Cambio: <span id="cambio">$0</span></p>
+          <p style="margin:.4rem 0 0;">Cambio: <span id="cambio">$0</span></p>
         </div>
       </div>
     </aside>
@@ -67,9 +94,9 @@
  
   <div class="acciones">
     <button id="guardar-venta" type="button" class="btn btn-secondary">Guardar venta abierta</button>
-    <button id="cerrar" class="btn btn-primary">Cerrar venta</button>
-    <button id="vaciar" onclick="vaciar_carrito()" class="btn btn-danger">Vaciar carrito</button>
-    <button id="volver" onclick="window.location.href='PapelLuna.html'" class="btn btn-secondary">Volver al catálogo</button>
+    <button id="cerrar"        class="btn btn-primary">Cerrar venta</button>
+    <button id="vaciar"        onclick="vaciar_carrito()" class="btn btn-danger">Vaciar carrito</button>
+    <button id="volver"        onclick="window.location.href='PapelLuna.html'" class="btn btn-secondary">Volver al catálogo</button>
   </div>
 </main>
  

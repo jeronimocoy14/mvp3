@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Descuentos - Papel y Luna</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .descuentos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 768px) { .descuentos-grid { grid-template-columns: 1fr; } }
+ 
+    .badge-tipo {
+      display: inline-block; padding: 2px 10px; border-radius: 12px;
+      font-size: 0.78rem; font-weight: 600;
+    }
+    .badge-porcentaje { background: #e0f0ff; color: #1565c0; }
+    .badge-fijo       { background: #e8f5e9; color: #2e7d32; }
+    .badge-inactivo   { background: #f5f5f5; color: #9e9e9e; }
+ 
+    .desc-card {
+      background: #fff; border: 1px solid #e0e0e0; border-radius: 10px;
+      padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: .5rem;
+    }
+    .desc-card.inactivo { opacity: .6; border-style: dashed; }
+    .desc-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .desc-card-nombre { font-size: 1.05rem; font-weight: 700; color: #2d2d2d; }
+    .desc-card-valor  { font-size: 1.3rem; font-weight: 800; color: #1565c0; }
+    .desc-card-desc   { font-size: .85rem; color: #666; }
+    .desc-card-acciones { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .3rem; }
+ 
+    #form-descuento { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 10px; padding: 1.2rem; }
+    #form-descuento h3 { margin: 0 0 1rem; color: #333; }
+    .form-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .form-row .form-group { flex: 1; min-width: 140px; }
+    .form-group { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .8rem; }
+    .form-group label { font-size: .85rem; font-weight: 600; color: #555; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: .45rem .7rem; border: 1px solid #ccc; border-radius: 6px; font-size: .95rem;
+    }
+    .preview-descuento {
+      background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px;
+      padding: .7rem 1rem; font-size: .9rem; margin-top: .5rem;
+    }
+    .lista-vacia { text-align: center; color: #999; padding: 2rem; font-size: .95rem; }
+  </style>
+</head>
+<body>
+ 
+<header class="app-header">
+  <div class="header-brand">
+    <img src="Logo.png" alt="Papel y Luna" class="logo">
+    <div>
+      <h1>Papel y Luna</h1>
+      <p class="subtitle">Gestión de descuentos</p>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <a href="PapelLuna.html"  class="btn btn-link">Nueva venta</a>
+    <a href="productos.html"  class="btn btn-link">Productos</a>
+    <a href="historial.html"  class="btn btn-link">Historial</a>
+    <a href="compras.html"    class="btn btn-link">Compras</a>
+    <a href="entidades.html"  class="btn btn-link">Entidades</a>
+    <div id="user-badge" class="user-badge"></div>
+  </nav>
+</header>
+ 
+<main class="contenedor-form">
+  <section class="page-intro">
+    <h1>Descuentos</h1>
+    <p class="subtitle">Crea y gestiona descuentos porcentuales o de valor fijo para aplicar en ventas.</p>
+  </section>
+ 
+  <div id="mensaje" class="mensaje"></div>
+ 
+  <!-- Solo visible para admin -->
+  <div id="seccion-admin">
+    <div class="descuentos-grid">
+ 
+      <!-- Panel izquierdo: formulario -->
+      <div>
+        <div id="form-descuento">
+          <h3 id="form-titulo">Nuevo descuento</h3>
+ 
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inp-nombre">Nombre *</label>
+              <input id="inp-nombre" type="text" placeholder="Ej: Promo fin de semana" maxlength="100">
+            </div>
+          </div>
+ 
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inp-tipo">Tipo *</label>
+              <select id="inp-tipo">
+                <option value="porcentaje">Porcentaje (%)</option>
+                <option value="fijo">Valor fijo ($)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="inp-valor">Valor *</label>
+              <input id="inp-valor" type="number" min="0.01" step="0.01" placeholder="10">
+            </div>
+          </div>
+ 
+          <div class="form-group">
+            <label for="inp-descripcion">Descripción (opcional)</label>
+            <textarea id="inp-descripcion" rows="2" placeholder="Descripción o condición de uso..."></textarea>
+          </div>
+ 
+          <!-- Preview dinámico -->
+          <div id="preview" class="preview-descuento" style="display:none"></div>
+ 
+          <div style="display:flex; gap:.7rem; margin-top:.8rem;">
+            <button class="btn btn-primary" onclick="guardarDescuento()">Guardar</button>
+            <button class="btn btn-secondary" onclick="cancelarEdicion()">Cancelar</button>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- Panel derecho: lista -->
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.8rem;">
+          <h2 style="margin:0;">Descuentos existentes</h2>
+          <label style="font-size:.85rem; color:#555;">
+            <input type="checkbox" id="chk-inactivos" onchange="cargarDescuentos()">
+            Ver inactivos
+          </label>
+        </div>
+        <div id="lista-descuentos"><p class="lista-vacia">Cargando...</p></div>
+      </div>
+ 
+    </div>
+  </div>
+ 
+  <!-- Mensaje para cajero (no puede gestionar) -->
+  <div id="seccion-cajero" style="display:none;">
+    <div class="panel-card" style="text-align:center; padding:2rem; color:#666;">
+      <p style="font-size:1.1rem;">Solo los administradores pueden gestionar descuentos.</p>
+      <p>Los descuentos disponibles se aplican al momento de cerrar una venta desde el carrito.</p>
+    </div>
+  </div>
+</main>
+ 
+<footer>
+  <p>© 2026 Papel y Luna. Todos los derechos reservados.</p>
+</footer>
+ 
+<script src="auth.js"></script>
+<script>Auth.requireLogin();</script>
+<script src="data.js"></script>
+<script>
+// ── Estado ────────────────────────────────────────────────────
+let editandoId   = null;
+let descuentos   = [];
+ 
+// ── Control de acceso por rol ─────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const usuario = Auth.getUsuario();
+  if (usuario?.rol !== 'admin') {
+    document.getElementById('seccion-admin').style.display = 'none';
+    document.getElementById('seccion-cajero').style.display = 'block';
+  }
+  cargarDescuentos();
+ 
+  // Preview dinámico
+  document.getElementById('inp-valor')?.addEventListener('input', actualizarPreview);
+  document.getElementById('inp-tipo')?.addEventListener('change', actualizarPreview);
+});
+ 
+// ── Preview ───────────────────────────────────────────────────
+function actualizarPreview() {
+  const tipo   = document.getElementById('inp-tipo').value;
+  const valor  = Number(document.getElementById('inp-valor').value);
+  const prev   = document.getElementById('preview');
+  if (!valor || valor <= 0) { prev.style.display = 'none'; return; }
+ 
+  const ejemploBase = 50000;
+  const descuento   = tipo === 'porcentaje'
+    ? ejemploBase * (valor / 100)
+    : valor;
+  const totalFinal  = Math.max(0, ejemploBase - descuento);
+ 
+  prev.style.display = 'block';
+  prev.innerHTML = `
+    <strong>Vista previa</strong> — sobre una compra de ejemplo de
+    ${ejemploBase.toLocaleString('es-CO', { style:'currency', currency:'COP' })}:<br>
+    Descuento: <strong>${descuento.toLocaleString('es-CO', { style:'currency', currency:'COP' })}</strong>
+    → Total final: <strong>${totalFinal.toLocaleString('es-CO', { style:'currency', currency:'COP' })}</strong>
+  `;
+}
+ 
+// ── Cargar lista ──────────────────────────────────────────────
+async function cargarDescuentos() {
+  const lista = document.getElementById('lista-descuentos');
+  try {
+    const res = await apiGet('descuentos');
+    if (!res.success) throw new Error(res.message);
+    descuentos = res.data;
+ 
+    const verInactivos = document.getElementById('chk-inactivos')?.checked;
+    const filtrados    = verInactivos ? descuentos : descuentos.filter(d => d.activo);
+ 
+    if (!filtrados.length) {
+      lista.innerHTML = '<p class="lista-vacia">No hay descuentos. Crea el primero.</p>';
+      return;
+    }
+ 
+    lista.innerHTML = filtrados.map(d => `
+      <div class="desc-card ${d.activo ? '' : 'inactivo'}">
+        <div class="desc-card-header">
+          <span class="desc-card-nombre">${d.nombre}</span>
+          <span class="badge-tipo badge-${d.activo ? d.tipo : 'inactivo'}">
+            ${d.activo ? (d.tipo === 'porcentaje' ? '%' : '$') : 'Inactivo'}
+          </span>
+        </div>
+        <div class="desc-card-valor">
+          ${d.tipo === 'porcentaje'
+            ? `${d.valor}% de descuento`
+            : `${Number(d.valor).toLocaleString('es-CO', { style:'currency', currency:'COP' })} de descuento`}
+        </div>
+        ${d.descripcion ? `<div class="desc-card-desc">${d.descripcion}</div>` : ''}
+        <div class="desc-card-acciones" id="acciones-admin-${d.id}">
+          <button class="btn btn-secondary" onclick="editarDescuento(${d.id})">Editar</button>
+          <button class="btn btn-secondary" onclick="toggleDescuento(${d.id})">
+            ${d.activo ? 'Desactivar' : 'Activar'}
+          </button>
+          <button class="btn btn-danger" onclick="eliminarDescuento(${d.id})">Eliminar</button>
+        </div>
+      </div>
+    `).join('');
+ 
+    // Ocultar acciones para cajeros
+    const usuario = Auth.getUsuario();
+    if (usuario?.rol !== 'admin') {
+      document.querySelectorAll('[id^="acciones-admin-"]').forEach(el => el.style.display = 'none');
+    }
+ 
+  } catch (err) {
+    lista.innerHTML = `<p class="lista-vacia">Error cargando descuentos: ${err.message}</p>`;
+  }
+}
+ 
+// ── Guardar (crear o editar) ──────────────────────────────────
+async function guardarDescuento() {
+  const nombre      = document.getElementById('inp-nombre').value.trim();
+  const tipo        = document.getElementById('inp-tipo').value;
+  const valor       = Number(document.getElementById('inp-valor').value);
+  const descripcion = document.getElementById('inp-descripcion').value.trim();
+ 
+  if (!nombre)       return mostrarMensaje('El nombre es obligatorio.', 'error');
+  if (!valor || valor <= 0) return mostrarMensaje('Ingresa un valor mayor a 0.', 'error');
+  if (tipo === 'porcentaje' && valor > 100) return mostrarMensaje('El porcentaje no puede superar 100.', 'error');
+ 
+  const body = { nombre, tipo, valor, descripcion };
+ 
+  try {
+    const res = editandoId
+      ? await apiPut('descuentos', editandoId, body)
+      : await apiPost('descuentos', body);
+ 
+    if (!res.success) throw new Error(res.message);
+    mostrarMensaje(res.message || (editandoId ? 'Descuento actualizado.' : 'Descuento creado.'));
+    cancelarEdicion();
+    cargarDescuentos();
+  } catch (err) {
+    mostrarMensaje('Error: ' + err.message, 'error');
+  }
+}
+ 
+// ── Editar ────────────────────────────────────────────────────
+function editarDescuento(id) {
+  const d = descuentos.find(x => x.id === id);
+  if (!d) return;
+  editandoId = id;
+  document.getElementById('form-titulo').textContent      = 'Editar descuento';
+  document.getElementById('inp-nombre').value             = d.nombre;
+  document.getElementById('inp-tipo').value               = d.tipo;
+  document.getElementById('inp-valor').value              = d.valor;
+  document.getElementById('inp-descripcion').value        = d.descripcion || '';
+  actualizarPreview();
+  document.getElementById('form-descuento').scrollIntoView({ behavior: 'smooth' });
+}
+ 
+function cancelarEdicion() {
+  editandoId = null;
+  document.getElementById('form-titulo').textContent = 'Nuevo descuento';
+  document.getElementById('inp-nombre').value        = '';
+  document.getElementById('inp-tipo').value          = 'porcentaje';
+  document.getElementById('inp-valor').value         = '';
+  document.getElementById('inp-descripcion').value   = '';
+  document.getElementById('preview').style.display   = 'none';
+}
+ 
+// ── Toggle activo/inactivo ─────────────────────────────────────
+async function toggleDescuento(id) {
+  try {
+    const res = await apiPatch('descuentos/' + id + '/toggle', {});
+    if (!res.success) throw new Error(res.message);
+    mostrarMensaje(res.message);
+    cargarDescuentos();
+  } catch (err) {
+    mostrarMensaje('Error: ' + err.message, 'error');
+  }
+}
+ 
+// ── Eliminar ──────────────────────────────────────────────────
+async function eliminarDescuento(id) {
+  const d = descuentos.find(x => x.id === id);
+  if (!d) return;
+  if (!(await confirmar(`¿Eliminar el descuento "${d.nombre}"?\nEsta acción no se puede deshacer.`))) return;
+  try {
+    const res = await apiDelete('descuentos', id);
+    if (!res.success) throw new Error(res.message);
+    mostrarMensaje('Descuento eliminado.');
+    cargarDescuentos();
+  } catch (err) {
+    mostrarMensaje('Error: ' + err.message, 'error');
+  }
+}
+</script>
+</body>
+</html>

@@ -2,53 +2,175 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Historial de ventas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historial de ventas - Papel y Luna</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Cards de venta ── */
+    .venta-card { background:#fff; border:1px solid #e0e0e0; border-radius:10px; padding:1rem 1.2rem; margin-bottom:1rem; }
+    .venta-card.venta-corregida { border-left:4px solid #f9a825; }
+    .venta-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.5rem; flex-wrap:wrap; gap:.3rem; }
+    .venta-fecha  { font-size:.85rem; color:#888; }
+    .venta-meta   { display:flex; gap:1rem; flex-wrap:wrap; font-size:.88rem; color:#555; margin-bottom:.4rem; }
+    .venta-total  { font-size:1.05rem; margin:.5rem 0; }
+    .venta-descuento { background:#fff8e1; border:1px solid #ffe082; border-radius:6px; padding:.3rem .7rem; font-size:.88rem; margin:.3rem 0; }
+    .venta-efectivo  { font-size:.88rem; color:#1565c0; margin:.2rem 0; }
+    .venta-items  { padding-left:1.2rem; margin:.5rem 0; font-size:.88rem; line-height:1.8; }
+    .venta-acciones { margin-top:.7rem; }
+    .badge-corregida { background:#fff3cd; color:#856404; border:1px solid #ffc107; border-radius:6px; padding:2px 8px; font-size:.78rem; margin-left:.5rem; }
+    .btn-sm { padding:.25rem .6rem; font-size:.82rem; }
+ 
+    /* ── Resumen líneas ── */
+    .resumen-linea { display:flex; justify-content:space-between; margin:.2rem 0; font-size:.92rem; }
+ 
+    /* ── Modal corrección ── */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; display:flex; align-items:center; justify-content:center; padding:1rem; }
+    .modal-overlay.oculto { display:none; }
+    .modal-box { background:#fff; border-radius:12px; padding:1.5rem; width:100%; max-width:700px; max-height:90vh; overflow-y:auto; }
+    .modal-box h2 { margin:0 0 .3rem; font-size:1.2rem; }
+    .modal-box .subtitulo { font-size:.82rem; color:#888; margin-bottom:1rem; }
+ 
+    .corr-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    @media(max-width:600px) { .corr-grid { grid-template-columns:1fr; } }
+ 
+    .corr-item { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;
+                 background:#f8f9fa; border-radius:8px; padding:.5rem .8rem; margin-bottom:.5rem; gap:.5rem; }
+    .corr-item-nombre { font-weight:600; font-size:.9rem; }
+    .corr-item-controles { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
+    .corr-item-controles input { width:70px; padding:.25rem .4rem; border:1px solid #ccc; border-radius:5px; font-size:.88rem; }
+ 
+    .corr-seccion { margin-bottom:1rem; }
+    .corr-seccion label { font-size:.85rem; font-weight:600; color:#555; display:block; margin-bottom:.3rem; }
+    .corr-seccion select, .corr-seccion input { width:100%; padding:.4rem .6rem; border:1px solid #ccc; border-radius:6px; font-size:.9rem; }
+ 
+    #corr-resumen { background:#f0f4ff; border-radius:8px; padding:.8rem 1rem; margin:.8rem 0; }
+    .modal-footer { display:flex; gap:.7rem; justify-content:flex-end; margin-top:1rem; flex-wrap:wrap; }
+ 
+    .agregar-producto-row { display:flex; gap:.5rem; margin-top:.5rem; }
+    .agregar-producto-row select { flex:1; padding:.35rem .5rem; border:1px solid #ccc; border-radius:6px; font-size:.88rem; }
+  </style>
 </head>
 <body>
+ 
 <header class="app-header">
   <div class="header-brand">
     <img src="Logo.png" alt="Papel y Luna" class="logo">
     <div>
       <h1>Papel y Luna</h1>
-      <p class="subtitle">Revisa ventas anteriores y regresa al punto de venta con facilidad.</p>
+      <p class="subtitle">Historial de ventas</p>
     </div>
   </div>
   <nav class="header-nav">
-    <a href="PapelLuna.html" class="btn btn-link">Nueva venta</a>
-    <a href="productos.html" class="btn btn-link">Productos</a>
-    <a href="historial.html" class="btn btn-link">Historial</a>
-    <a href="compras.html" class="btn btn-link">Compras</a>
-    <a href="entidades.html" class="btn btn-link">Entidades</a>
+    <a href="PapelLuna.html"  class="btn btn-link">Nueva venta</a>
+    <a href="productos.html"  class="btn btn-link">Productos</a>
+    <a href="historial.html"  class="btn btn-link">Historial</a>
+    <a href="compras.html"    class="btn btn-link">Compras</a>
+    <a href="entidades.html"  class="btn btn-link">Entidades</a>
+    <a href="descuentos.html" class="btn btn-link">Descuentos</a>
     <div id="user-badge" class="user-badge"></div>
   </nav>
 </header>
-
+ 
 <main class="contenedor-form">
   <section class="page-intro">
     <h1>Historial de ventas</h1>
-    <p class="subtitle">Busca las ventas anteriores y consulta los detalles de manera rápida.</p>
+    <p class="subtitle">Consulta el detalle de cada venta. Los administradores pueden corregir ventas cerradas.</p>
   </section>
-
+ 
   <div id="mensaje" class="mensaje"></div>
   <div id="ventas"></div>
+ 
   <div class="footer-links">
     <button id="volver" class="btn btn-secondary">Volver a la página principal</button>
   </div>
 </main>
-
+ 
+<!-- ── Modal corrección de venta ── -->
+<div id="modal-correccion" class="modal-overlay oculto">
+  <div class="modal-box">
+    <h2 id="corr-titulo">Corrigiendo venta</h2>
+    <p class="subtitulo" id="corr-original"></p>
+ 
+    <div class="corr-grid">
+      <!-- Columna izquierda: productos -->
+      <div>
+        <div class="corr-seccion">
+          <label>Productos de la venta</label>
+          <div id="corr-items"></div>
+ 
+          <div class="agregar-producto-row">
+            <select id="corr-producto-nuevo">
+              <option value="">— Agregar producto —</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" onclick="agregarProductoCorreccion(); poblarSelectProductos();">+ Agregar</button>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- Columna derecha: datos de pago -->
+      <div>
+        <div class="corr-seccion">
+          <label for="corr-cliente">Cliente</label>
+          <select id="corr-cliente">
+            <option value="">— Sin cliente —</option>
+          </select>
+        </div>
+ 
+        <div class="corr-seccion">
+          <label for="corr-metodo">Método de pago</label>
+          <select id="corr-metodo" onchange="actualizarEfectivoCorreccion()">
+            <option value="">Selecciona método</option>
+            <option value="Efectivo">Efectivo</option>
+            <option value="Nequi">Nequi</option>
+            <option value="tarjeta">Tarjeta</option>
+          </select>
+        </div>
+ 
+        <div class="corr-seccion" id="corr-efectivo-box" style="display:none">
+          <label for="corr-recibido">Valor recibido</label>
+          <input type="number" id="corr-recibido" placeholder="0" oninput="recalcularCorreccion()">
+        </div>
+ 
+        <div class="corr-seccion">
+          <label for="corr-descuento">Descuento</label>
+          <select id="corr-descuento" onchange="recalcularCorreccion()">
+            <option value="">— Sin descuento —</option>
+          </select>
+        </div>
+ 
+        <!-- Resumen recalculado en tiempo real -->
+        <div id="corr-resumen"></div>
+      </div>
+    </div>
+ 
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModalCorreccion()">Cancelar</button>
+      <button class="btn btn-primary"   onclick="guardarCorreccion()">Guardar corrección</button>
+    </div>
+  </div>
+</div>
+ 
 <footer>
-    <p>© 2026 Papel y Luna. Todos los derechos reservados.</p>
-    <p><strong>Dirección:</strong> Calle 10 #5-35, Chía, Cundinamarca</p>
-    <p><strong>Teléfono:</strong> 350 884 1010</p>
-    <p><strong>Horarios:</strong></p>
-    <p>Lunes a viernes: 7:00 a.m. – 8:00 p.m.</p>
-    <p>Sábados y domingos: 9:00 a.m. – 6:00 p.m.</p>
+  <p>© 2026 Papel y Luna. Todos los derechos reservados.</p>
+  <p><strong>Dirección:</strong> Calle 10 #5-35, Chía, Cundinamarca</p>
+  <p><strong>Teléfono:</strong> 350 884 1010</p>
+  <p><strong>Horarios:</strong> Lun–Vie: 7am–8pm · Sáb–Dom: 9am–6pm</p>
 </footer>
-
+ 
 <script src="auth.js"></script>
 <script>Auth.requireLogin();</script>
 <script src="data.js"></script>
 <script src="historial.js"></script>
+<script>
+  // Poblar el select de productos cuando se abra el modal
+  document.getElementById('modal-correccion').addEventListener('transitionend', poblarSelectProductos);
+  // Fallback: poblar cuando el modal se hace visible
+  const observer = new MutationObserver(() => {
+    if (!document.getElementById('modal-correccion').classList.contains('oculto')) {
+      poblarSelectProductos();
+    }
+  });
+  observer.observe(document.getElementById('modal-correccion'), { attributes: true, attributeFilter: ['class'] });
+</script>
 </body>
 </html>

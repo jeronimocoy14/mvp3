@@ -1,17 +1,12 @@
-// ============================================================
-// productos.js — Gestión de inventario (productos.html)
-// ============================================================
-
-// Variables de módulo — se asignan dentro de DOMContentLoaded
 let nombreInput, precioInput, stockInput, costoInput;
 let categoriaInput, proveedorInput, imagenInput, listaContenedor;
 let modalOverlay, modalText, modalInput;
 let modalCancel, modalAccept, modalCosto, modalPrecio, modalCancelar;
-
+ 
 let productoEditandoId   = null;
 let modalConfirmCallback = null;
 let modalPromptCallback  = null;
-
+ 
 // ── Cargar productos desde la API ────────────────────────────
 async function obtenerProductos() {
   if (listaContenedor) listaContenedor.innerHTML = '<p>Cargando productos...</p>';
@@ -36,7 +31,7 @@ async function obtenerProductos() {
     if (listaContenedor) listaContenedor.innerHTML = '<p>No se pudo cargar el inventario.</p>';
   }
 }
-
+ 
 // ── Datalists de categorías y proveedores ─────────────────────
 async function cargarDatalistsProductos() {
   try {
@@ -52,7 +47,7 @@ async function cargarDatalistsProductos() {
       dl.innerHTML = res.data.map(p => `<option value="${p.nombre}"></option>`).join('');
   } catch {}
 }
-
+ 
 // ── Crear producto ───────────────────────────────────────────
 async function crear() {
   const nombre    = nombreInput?.value.trim();
@@ -62,16 +57,16 @@ async function crear() {
   const categoria = categoriaInput?.value.trim() || 'General';
   const proveedor = proveedorInput?.value.trim() || '';
   const imagen    = imagenInput?.value.trim()    || '';
-
+ 
   if (!nombre)    { mostrarMensaje('Escribe el nombre del producto.', 'error'); return; }
   if (precio <= 0){ mostrarMensaje('El precio debe ser mayor a 0.',   'error'); return; }
-
+ 
   const existente = productos.find(p => p.nombre.toLowerCase() === nombre.toLowerCase());
   const nuevo = {
     id: existente ? existente.id : String(Date.now()),
     nombre, precio, stock, costo, categoria, proveedor, imagen
   };
-
+ 
   mostrarMensaje('Guardando...', 'info');
   let res;
   if (existente) {
@@ -85,7 +80,7 @@ async function crear() {
   await new Promise(r => setTimeout(r, 1500));
   await obtenerProductos();
 }
-
+ 
 // ── Sincronizar producto editado ─────────────────────────────
 async function sincronizarProducto(producto) {
   mostrarMensaje('Guardando cambios...', 'info');
@@ -95,7 +90,7 @@ async function sincronizarProducto(producto) {
   await new Promise(r => setTimeout(r, 1500));
   await obtenerProductos();
 }
-
+ 
 // ── Eliminar ─────────────────────────────────────────────────
 function eliminar(id) {
   const p = productos.find(p => String(p.id) === String(id));
@@ -108,7 +103,7 @@ function eliminar(id) {
     await obtenerProductos();
   });
 }
-
+ 
 // ── Restock ──────────────────────────────────────────────────
 function restock(id) {
   const p = productos.find(p => String(p.id) === String(id));
@@ -119,7 +114,7 @@ function restock(id) {
     async (valor) => {
       const cantidad = Number(valor);
       if (isNaN(cantidad) || cantidad <= 0) { mostrarMensaje('Cantidad inválida.', 'error'); return; }
-      const res = await apiPatch('productos', p.id, 'stock', { cantidad });
+      const res = await apiPatch(`productos/${p.id}/stock`, { cantidad });
       if (!res.success) throw new Error(res.message);
       mostrarMensaje('Stock actualizado ✓');
       await new Promise(r => setTimeout(r, 500));
@@ -127,7 +122,7 @@ function restock(id) {
     }
   );
 }
-
+ 
 // ── Editar ───────────────────────────────────────────────────
 function editar(id) {
   const p = productos.find(p => String(p.id) === String(id));
@@ -135,13 +130,13 @@ function editar(id) {
   productoEditandoId = id;
   mostrarEditables(`¿Qué deseas modificar de "${p.nombre}"?`);
 }
-
+ 
 // ── Cancelar formulario ──────────────────────────────────────
 function cancelar() {
   [nombreInput, precioInput, stockInput, costoInput,
    categoriaInput, proveedorInput, imagenInput].forEach(el => { if (el) el.value = ''; });
 }
-
+ 
 // ── Render ───────────────────────────────────────────────────
 function renderizarTabla() {
   if (!listaContenedor) return;
@@ -172,7 +167,7 @@ function renderizarTabla() {
       </div>
     </div>`).join('');
 }
-
+ 
 // ── Helpers del modal ─────────────────────────────────────────
 function ocultarTodoModal() {
   // Oculta todos los botones/inputs del modal; cada función luego muestra los que necesita
@@ -180,7 +175,7 @@ function ocultarTodoModal() {
     .forEach(el => el?.classList.add('oculto'));
   if (modalInput) modalInput.value = '';
 }
-
+ 
 function cerrarModal() {
   modalOverlay?.classList.add('oculto');
   ocultarTodoModal();
@@ -188,7 +183,7 @@ function cerrarModal() {
   modalPromptCallback  = null;
   productoEditandoId   = null;
 }
-
+ 
 // Muestra: input + Aceptar + Cancelar
 function mostrarPrompt(texto, defaultValue, onSubmit) {
   ocultarTodoModal();
@@ -204,7 +199,7 @@ function mostrarPrompt(texto, defaultValue, onSubmit) {
   modalOverlay.classList.remove('oculto');
   setTimeout(() => modalInput.focus(), 50);
 }
-
+ 
 // Muestra: Sí + No (sin input)
 function mostrarConfirm(texto, onConfirm) {
   ocultarTodoModal();
@@ -217,7 +212,7 @@ function mostrarConfirm(texto, onConfirm) {
   modalPromptCallback  = null;
   modalOverlay.classList.remove('oculto');
 }
-
+ 
 // Muestra: Editar Precio + Editar Costo + Cerrar (sin input, sin Aceptar)
 function mostrarEditables(texto) {
   ocultarTodoModal();
@@ -227,7 +222,7 @@ function mostrarEditables(texto) {
   modalCancelar.classList.remove('oculto');
   modalOverlay.classList.remove('oculto');
 }
-
+ 
 // ── Exponer al scope global ──────────────────────────────────
 // Funciones de edición directa por campo
 function editarPrecio(id) {
@@ -239,7 +234,7 @@ function editarPrecio(id) {
     await sincronizarProducto({ ...p, precio: num });
   });
 }
-
+ 
 function editarCosto(id) {
   const p = productos.find(p => String(p.id) === String(id));
   if (!p) return;
@@ -249,7 +244,7 @@ function editarCosto(id) {
     await sincronizarProducto({ ...p, costo: num });
   });
 }
-
+ 
 function editarProveedor(id) {
   const p = productos.find(p => String(p.id) === String(id));
   if (!p) return;
@@ -259,7 +254,7 @@ function editarProveedor(id) {
     await sincronizarProducto({ ...p, proveedor: txt });
   });
 }
-
+ 
 window.restock        = restock;
 window.editar         = editar;
 window.eliminar       = eliminar;
@@ -268,7 +263,7 @@ window.crear          = crear;
 window.editarPrecio   = editarPrecio;
 window.editarCosto    = editarCosto;
 window.editarProveedor= editarProveedor;
-
+ 
 // ── Init: todo dentro de DOMContentLoaded ────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // Asignar referencias DOM ahora que el HTML está listo
@@ -280,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
   proveedorInput = document.getElementById('proveedor');
   imagenInput    = document.getElementById('imagen');
   listaContenedor= document.getElementById('lista');
-
+ 
   modalOverlay   = document.getElementById('modal-overlay');
   modalText      = document.getElementById('modal-text');
   modalInput     = document.getElementById('modal-input');
@@ -289,10 +284,10 @@ document.addEventListener('DOMContentLoaded', () => {
   modalCosto     = document.getElementById('modal-costo');
   modalPrecio    = document.getElementById('modal-precio');
   modalCancelar  = document.getElementById('modal-cancelar');
-
+ 
   // Asegurarse de que el modal empiece oculto
   cerrarModal();
-
+ 
   // ── Listeners del modal ──────────────────────────────────
   modalAccept?.addEventListener('click', () => {
     if (!modalInput?.classList.contains('oculto')) {
@@ -304,15 +299,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     cerrarModal();
   });
-
+ 
   modalCancel?.addEventListener('click',   () => cerrarModal());
   modalCancelar?.addEventListener('click', () => cerrarModal());
-
+ 
   modalInput?.addEventListener('keydown', e => {
     if (e.key === 'Enter') modalAccept?.click();
     if (e.key === 'Escape') cerrarModal();
   });
-
+ 
   modalPrecio?.addEventListener('click', () => {
     const p = productos.find(p => String(p.id) === String(productoEditandoId));
     if (!p) return;
@@ -325,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     productoEditandoId = id; // restaurar después de cerrarModal
   });
-
+ 
   modalCosto?.addEventListener('click', () => {
     const p = productos.find(p => String(p.id) === String(productoEditandoId));
     if (!p) return;
@@ -338,12 +333,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     productoEditandoId = id;
   });
-
+ 
   // Botón volver
   document.getElementById('volver')?.addEventListener('click', () => {
     window.location.href = 'PapelLuna.html';
   });
-
+ 
   // Cargar datos
   obtenerProductos();
 });
