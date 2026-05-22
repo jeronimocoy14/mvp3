@@ -34,12 +34,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
  
 // ── Rutas ────────────────────────────────────────────────────
-app.use('/api/auth',       require('./routes/auth'));
-app.use('/api/descuentos', require('./routes/descuentos'));
-app.use('/api/productos', require('./routes/productos'));
-app.use('/api/ventas',    require('./routes/ventas'));
-app.use('/api/compras',   require('./routes/compras'));
-app.use('/api',           require('./routes/entidades'));  // /api/categorias, /api/proveedores, /api/clientes
+app.use('/api/auth',        require('./routes/auth'));
+app.use('/api/descuentos',  require('./routes/descuentos'));
+app.use('/api/productos',   require('./routes/productos'));
+app.use('/api/ventas',      require('./routes/ventas'));
+app.use('/api/compras',     require('./routes/compras'));
+app.use('/api/reembolsos',  require('./routes/reembolsos'));
+app.use('/api/faltantes',  require('./routes/faltantes'));
+app.use('/api/reportes',   require('./routes/reportes'));
+app.use('/api',             require('./routes/entidades'));   // /api/categorias, /api/proveedores, /api/clientes
  
 // Ruta dummy para /api/carrito (el frontend la llama pero no es crítica)
 app.post('/api/carrito', (req, res) => res.json({ success: true }));
@@ -83,8 +86,12 @@ app.listen(PORT, async () => {
   DELETE /api/productos/:id
   GET    /api/ventas
   POST   /api/ventas
+  PUT    /api/ventas/:id/corregir
   GET    /api/compras
   POST   /api/compras
+  GET    /api/reembolsos
+  GET    /api/reembolsos/venta/:ventaId
+  POST   /api/reembolsos
   GET/POST/PUT/DELETE /api/categorias
   GET/POST/PUT/DELETE /api/proveedores
   GET/POST/PUT/DELETE /api/clientes`);

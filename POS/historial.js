@@ -3,11 +3,16 @@ if (btnVolver) btnVolver.onclick = () => { window.location.href = 'PapelLuna.htm
  
 const fmt = v => Number(v || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP' });
  
-// ── Estado del modal de corrección ───────────────────────────
+// ── Estado modal corrección ───────────────────────────────────
 let ventaCorrigiendo  = null;
 let itemsCorreccion   = [];
 let productosCache    = [];
 let descuentosCache   = [];
+ 
+// ── Estado modal reembolso ────────────────────────────────────
+let ventaReembolsando = null;
+let itemsReembolso    = [];   // { producto_id, nombre, precio, cantidad (max), cantidadSel, retorna_stock }
+let tipoReembolso     = 'total';
  
 function parseItems(items) {
   if (Array.isArray(items)) return items;
@@ -15,7 +20,9 @@ function parseItems(items) {
   catch { return []; }
 }
  
-// ── Render principal de ventas ────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// RENDER PRINCIPAL
+// ════════════════════════════════════════════════════════════
 function renderVentas(ventas) {
   const contenedor = document.getElementById('ventas');
   if (!contenedor) return;
@@ -25,33 +32,37 @@ function renderVentas(ventas) {
     return;
   }
  
-  const usuario   = Auth.getUsuario();
-  const esAdmin   = usuario?.rol === 'admin';
+  const usuario = Auth.getUsuario();
+  const esAdmin = usuario?.rol === 'admin';
  
   contenedor.innerHTML = ventas.map(v => {
-    const items      = parseItems(v.items || []);
-    const total      = Number(v.total          || 0);
-    const subtotal   = Number(v.subtotal       || 0);
-    const recibido   = Number(v.recibido       || 0);
-    const cambio     = Number(v.cambio         || 0);
-    const descValor  = Number(v.descuento_valor|| 0);
-    const metodo     = v.metodo_pago || '—';
-    const esEfectivo = metodo.toLowerCase().includes('efectivo');
+    const items        = parseItems(v.items || []);
+    const total        = Number(v.total           || 0);
+    const subtotal     = Number(v.subtotal        || 0);
+    const recibido     = Number(v.recibido        || 0);
+    const cambio       = Number(v.cambio          || 0);
+    const descValor    = Number(v.descuento_valor || 0);
+    const metodo       = v.metodo_pago || '—';
+    const esEfectivo   = metodo.toLowerCase().includes('efectivo');
     const fueCorregida = !!v.corregida_por;
+    const reembolsada  = v.estado === 'reembolsada';
  
     const itemsHtml = items.map(i =>
       `<li>${i.nombre || 'Producto'} — ${Number(i.cantidad || 0)} × ${fmt(i.precio)}
        <span style="color:#666"> = ${fmt(Number(i.precio||0)*Number(i.cantidad||0))}</span></li>`
     ).join('');
  
-    // Badge de estado
+    // Badges de estado
     const badgeCorregida = fueCorregida
       ? `<span class="badge-corregida">✏️ Corregida por ${v.corregidaPorNombre || 'admin'}
-           ${v.fecha_correccion ? '· ' + new Date(v.fecha_correccion).toLocaleString('es-CO') : ''}
+           ${v.corregida_en ? '· ' + new Date(v.corregida_en).toLocaleString('es-CO') : ''}
          </span>`
       : '';
+    const badgeReembolsada = reembolsada
+      ? `<span class="badge-reembolsada">↩️ Reembolsada</span>`
+      : '';
  
-    // Sección de descuento
+    // Descuento
     const descuentoHtml = descValor > 0 ? `
       <div class="venta-descuento">
         🏷️ Descuento${v.descuentoNombre ? ` <em>${v.descuentoNombre}</em>` : ''}:
@@ -59,19 +70,32 @@ function renderVentas(ventas) {
         ${subtotal > 0 ? `<span style="color:#999;font-size:.85rem"> (subtotal: ${fmt(subtotal)})</span>` : ''}
       </div>` : '';
  
-    // Sección de efectivo
+    // Efectivo
     const efectivoHtml = esEfectivo && recibido > 0 ? `
       <div class="venta-efectivo">
         💵 Recibido: <strong>${fmt(recibido)}</strong>
         &nbsp;·&nbsp; Cambio: <strong>${fmt(cambio)}</strong>
       </div>` : '';
  
+    // Botones de acciones (solo admin, y según estado)
+    let accionesHtml = '';
+    if (esAdmin) {
+      const btnCorregir = !reembolsada
+        ? `<button class="btn btn-secondary btn-sm" onclick="abrirCorreccion(${v.id})">✏️ Corregir</button>`
+        : '';
+      const btnReembolsar = !reembolsada
+        ? `<button class="btn btn-danger btn-sm" onclick="abrirReembolso(${v.id})">↩️ Reembolsar</button>`
+        : '<span style="font-size:.82rem;color:#c62828;">Venta reembolsada</span>';
+      accionesHtml = `<div class="venta-acciones">${btnCorregir}${btnReembolsar}</div>`;
+    }
+ 
     return `
-      <div class="venta-card ${fueCorregida ? 'venta-corregida' : ''}">
+      <div class="venta-card ${reembolsada ? 'venta-reembolsada' : fueCorregida ? 'venta-corregida' : ''}">
         <div class="venta-header">
           <div>
             <strong>#${v.id}</strong>
             ${badgeCorregida}
+            ${badgeReembolsada}
           </div>
           <span class="venta-fecha">${v.fecha ? new Date(v.fecha).toLocaleString('es-CO') : '—'}</span>
         </div>
@@ -85,21 +109,14 @@ function renderVentas(ventas) {
         ${descuentoHtml}
         ${efectivoHtml}
  
-        <div class="venta-total">
-          Total: <strong>${fmt(total)}</strong>
-        </div>
+        <div class="venta-total">Total: <strong>${fmt(total)}</strong></div>
  
         <details>
           <summary>Ver productos (${items.length})</summary>
           <ul class="venta-items">${itemsHtml || '<li>Sin detalle</li>'}</ul>
         </details>
  
-        ${esAdmin ? `
-          <div class="venta-acciones">
-            <button class="btn btn-secondary btn-sm" onclick="abrirCorreccion(${v.id})">
-              ✏️ Corregir venta
-            </button>
-          </div>` : ''}
+        ${accionesHtml}
       </div>`;
   }).join('');
 }
@@ -120,11 +137,9 @@ async function cargarHistorial() {
 }
  
 // ════════════════════════════════════════════════════════════
-// MÓDULO DE CORRECCIÓN DE VENTAS
+// MÓDULO DE CORRECCIÓN
 // ════════════════════════════════════════════════════════════
- 
 async function abrirCorreccion(ventaId) {
-  // Cargar la venta completa
   mostrarMensaje('Cargando venta...', 'info');
   try {
     const res = await apiGet(`ventas/${ventaId}`);
@@ -132,7 +147,6 @@ async function abrirCorreccion(ventaId) {
     ventaCorrigiendo = res.data;
     itemsCorreccion  = ventaCorrigiendo.items.map(i => ({ ...i }));
  
-    // Cargar productos y descuentos para los selects
     const [resProd, resDesc] = await Promise.all([
       apiGet('productos'),
       apiGet('descuentos')
@@ -150,32 +164,24 @@ async function abrirCorreccion(ventaId) {
  
 function renderModalCorreccion() {
   const v = ventaCorrigiendo;
- 
-  // Encabezado
   document.getElementById('corr-titulo').textContent = `Corrigiendo venta #${v.id}`;
   document.getElementById('corr-original').innerHTML =
     `Fecha original: ${new Date(v.fecha).toLocaleString('es-CO')} · Cajero: ${v.cajeroNombre || '—'}`;
  
-  // Cliente select
   const clienteSel = document.getElementById('corr-cliente');
   clienteSel.innerHTML = '<option value="">— Sin cliente —</option>';
-  // (clientes se cargan aparte si se necesitan — usamos el existente)
-  const optCliente = document.createElement('option');
   if (v.clienteNombre) {
-    optCliente.value = v.cliente_id;
-    optCliente.textContent = v.clienteNombre;
-    optCliente.selected = true;
-    clienteSel.appendChild(optCliente);
+    const opt = document.createElement('option');
+    opt.value = v.cliente_id;
+    opt.textContent = v.clienteNombre;
+    opt.selected = true;
+    clienteSel.appendChild(opt);
   }
  
-  // Método de pago
-  document.getElementById('corr-metodo').value = v.metodo_pago || '';
- 
-  // Recibido (solo efectivo)
-  document.getElementById('corr-recibido').value = v.recibido || '';
+  document.getElementById('corr-metodo').value    = v.metodo_pago || '';
+  document.getElementById('corr-recibido').value  = v.recibido || '';
   actualizarEfectivoCorreccion();
  
-  // Descuento select
   const descSel = document.getElementById('corr-descuento');
   descSel.innerHTML = '<option value="">— Sin descuento —</option>';
   descuentosCache.forEach(d => {
@@ -213,7 +219,6 @@ function eliminarItemCorreccion(i) {
   renderItemsCorreccion();
 }
  
-// Agregar producto a la corrección
 function agregarProductoCorreccion() {
   const sel = document.getElementById('corr-producto-nuevo');
   const id  = Number(sel.value);
@@ -225,18 +230,12 @@ function agregarProductoCorreccion() {
   if (yaExiste >= 0) {
     itemsCorreccion[yaExiste].cantidad += 1;
   } else {
-    itemsCorreccion.push({
-      producto_id: prod.id,
-      nombre:      prod.nombre,
-      precio:      prod.precio,
-      cantidad:    1
-    });
+    itemsCorreccion.push({ producto_id: prod.id, nombre: prod.nombre, precio: prod.precio, cantidad: 1 });
   }
   sel.value = '';
   renderItemsCorreccion();
 }
  
-// Poblar select de productos para agregar
 function poblarSelectProductos() {
   const sel = document.getElementById('corr-producto-nuevo');
   sel.innerHTML = '<option value="">— Agregar producto —</option>';
@@ -249,23 +248,20 @@ function poblarSelectProductos() {
 }
  
 function actualizarEfectivoCorreccion() {
-  const metodo   = document.getElementById('corr-metodo').value;
-  const boxEfect = document.getElementById('corr-efectivo-box');
-  boxEfect.style.display = metodo === 'Efectivo' ? 'block' : 'none';
+  const metodo = document.getElementById('corr-metodo').value;
+  document.getElementById('corr-efectivo-box').style.display = metodo === 'Efectivo' ? 'block' : 'none';
   recalcularCorreccion();
 }
  
 function recalcularCorreccion() {
-  const subtotal    = itemsCorreccion.reduce((s, i) => s + Number(i.precio) * Number(i.cantidad), 0);
-  const descId      = Number(document.getElementById('corr-descuento').value);
-  const desc        = descuentosCache.find(d => d.id === descId);
-  const descValor   = desc
-    ? (desc.tipo === 'porcentaje' ? subtotal * (desc.valor / 100) : Number(desc.valor))
-    : 0;
-  const total       = Math.max(0, subtotal - descValor);
-  const metodo      = document.getElementById('corr-metodo').value;
-  const recibido    = metodo === 'Efectivo' ? Number(document.getElementById('corr-recibido').value) || 0 : 0;
-  const cambio      = metodo === 'Efectivo' ? Math.max(0, recibido - total) : 0;
+  const subtotal  = itemsCorreccion.reduce((s, i) => s + Number(i.precio) * Number(i.cantidad), 0);
+  const descId    = Number(document.getElementById('corr-descuento').value);
+  const desc      = descuentosCache.find(d => d.id === descId);
+  const descValor = desc ? (desc.tipo === 'porcentaje' ? subtotal * (desc.valor / 100) : Number(desc.valor)) : 0;
+  const total     = Math.max(0, subtotal - descValor);
+  const metodo    = document.getElementById('corr-metodo').value;
+  const recibido  = metodo === 'Efectivo' ? Number(document.getElementById('corr-recibido').value) || 0 : 0;
+  const cambio    = metodo === 'Efectivo' ? Math.max(0, recibido - total) : 0;
  
   document.getElementById('corr-resumen').innerHTML = `
     <div class="resumen-linea">Subtotal: <strong>${fmt(subtotal)}</strong></div>
@@ -276,43 +272,28 @@ function recalcularCorreccion() {
 }
  
 async function guardarCorreccion() {
-  if (!itemsCorreccion.length) {
-    mostrarMensaje('La venta debe tener al menos un producto.', 'error'); return;
-  }
+  if (!itemsCorreccion.length) { mostrarMensaje('La venta debe tener al menos un producto.', 'error'); return; }
   const metodo = document.getElementById('corr-metodo').value;
   if (!metodo) { mostrarMensaje('Selecciona un método de pago.', 'error'); return; }
  
   const descId    = Number(document.getElementById('corr-descuento').value) || null;
   const clienteId = document.getElementById('corr-cliente').value || null;
-  const recibido  = metodo === 'Efectivo'
-    ? Number(document.getElementById('corr-recibido').value) || 0
-    : 0;
- 
+  const recibido  = metodo === 'Efectivo' ? Number(document.getElementById('corr-recibido').value) || 0 : 0;
   const subtotal  = itemsCorreccion.reduce((s, i) => s + Number(i.precio) * Number(i.cantidad), 0);
   const desc      = descuentosCache.find(d => d.id === descId);
-  const descValor = desc
-    ? (desc.tipo === 'porcentaje' ? subtotal * (desc.valor / 100) : Number(desc.valor))
-    : 0;
+  const descValor = desc ? (desc.tipo === 'porcentaje' ? subtotal * (desc.valor / 100) : Number(desc.valor)) : 0;
   const total     = Math.max(0, subtotal - descValor);
  
-  if (metodo === 'Efectivo' && recibido < total) {
-    mostrarMensaje('El valor recibido es insuficiente.', 'error'); return;
-  }
- 
+  if (metodo === 'Efectivo' && recibido < total) { mostrarMensaje('El valor recibido es insuficiente.', 'error'); return; }
   if (!(await confirmar(`¿Guardar corrección de venta #${ventaCorrigiendo.id}?\nEsto modificará el inventario y los totales.`))) return;
  
   mostrarMensaje('Guardando corrección...', 'info');
   try {
     const res = await apiPut('ventas', `${ventaCorrigiendo.id}/corregir`, {
-      cliente_id:   clienteId,
-      metodo_pago:  metodo,
-      descuento_id: descId,
-      recibido,
+      cliente_id: clienteId, metodo_pago: metodo, descuento_id: descId, recibido,
       items: itemsCorreccion.map(i => ({
         producto_id: i.producto_id || i.id || null,
-        nombre:      i.nombre,
-        precio:      Number(i.precio),
-        cantidad:    Number(i.cantidad)
+        nombre: i.nombre, precio: Number(i.precio), cantidad: Number(i.cantidad)
       }))
     });
     if (!res.success) throw new Error(res.message);
@@ -330,15 +311,163 @@ function cerrarModalCorreccion() {
   itemsCorreccion  = [];
 }
  
-// Exponer funciones al scope global
-window.abrirCorreccion          = abrirCorreccion;
-window.cerrarModalCorreccion    = cerrarModalCorreccion;
-window.guardarCorreccion        = guardarCorreccion;
-window.eliminarItemCorreccion   = eliminarItemCorreccion;
-window.agregarProductoCorreccion= agregarProductoCorreccion;
+// ════════════════════════════════════════════════════════════
+// MÓDULO DE REEMBOLSO
+// ════════════════════════════════════════════════════════════
+async function abrirReembolso(ventaId) {
+  mostrarMensaje('Cargando venta...', 'info');
+  try {
+    const res = await apiGet(`ventas/${ventaId}`);
+    if (!res.success) throw new Error(res.message);
+    ventaReembolsando = res.data;
+ 
+    // Preparar items con cantidad seleccionada = cantidad original (reembolso total por defecto)
+    itemsReembolso = ventaReembolsando.items.map(i => ({
+      producto_id:   i.producto_id,
+      nombre:        i.nombre,
+      precio:        Number(i.precio),
+      cantidadMax:   Number(i.cantidad),
+      cantidadSel:   Number(i.cantidad),  // empieza con todo seleccionado
+      retorna_stock: true
+    }));
+ 
+    tipoReembolso = 'total';
+    mostrarMensaje('');
+    renderModalReembolso();
+    document.getElementById('modal-reembolso').classList.remove('oculto');
+  } catch (err) {
+    mostrarMensaje('Error cargando venta: ' + err.message, 'error');
+  }
+}
+ 
+function setTipoReembolso(tipo) {
+  tipoReembolso = tipo;
+  document.getElementById('btn-tipo-total').classList.toggle('activo',   tipo === 'total');
+  document.getElementById('btn-tipo-parcial').classList.toggle('activo', tipo === 'parcial');
+ 
+  // Si cambia a total, restablecer todas las cantidades al máximo
+  if (tipo === 'total') {
+    itemsReembolso.forEach(i => i.cantidadSel = i.cantidadMax);
+  }
+ 
+  renderItemsReembolso();
+}
+ 
+function renderModalReembolso() {
+  const v = ventaReembolsando;
+  document.getElementById('remb-titulo').textContent   = `Reembolso — Venta #${v.id}`;
+  document.getElementById('remb-subtitulo').textContent =
+    `Total original: ${fmt(v.total)} · ${v.clienteNombre ? 'Cliente: ' + v.clienteNombre : 'Sin cliente'}`;
+  document.getElementById('remb-motivo').value = '';
+ 
+  // Sincronizar botones de tipo
+  document.getElementById('btn-tipo-total').classList.add('activo');
+  document.getElementById('btn-tipo-parcial').classList.remove('activo');
+ 
+  renderItemsReembolso();
+}
+ 
+function renderItemsReembolso() {
+  const cont = document.getElementById('remb-items');
+  const esParcial = tipoReembolso === 'parcial';
+ 
+  cont.innerHTML = itemsReembolso.map((item, i) => `
+    <div class="remb-item">
+      <span class="remb-item-nombre">${item.nombre}
+        <span style="color:#888;font-size:.8rem"> × ${item.cantidadMax} · ${fmt(item.precio)} c/u</span>
+      </span>
+      <div class="remb-item-controles">
+        ${esParcial ? `
+          <label>Cant.</label>
+          <input type="number" min="1" max="${item.cantidadMax}" value="${item.cantidadSel}"
+            onchange="itemsReembolso[${i}].cantidadSel = Math.min(${item.cantidadMax}, Math.max(1, Number(this.value))); this.value = itemsReembolso[${i}].cantidadSel; recalcularReembolso()">
+        ` : `<span style="font-size:.85rem;color:#555">${item.cantidadSel} ud.</span>`}
+        <label>
+          <input type="checkbox" ${item.retorna_stock ? 'checked' : ''}
+            onchange="itemsReembolso[${i}].retorna_stock = this.checked">
+          Devolver stock
+        </label>
+      </div>
+    </div>
+  `).join('');
+ 
+  recalcularReembolso();
+}
+ 
+function recalcularReembolso() {
+  const monto = itemsReembolso.reduce(
+    (s, i) => s + i.precio * i.cantidadSel, 0
+  );
+  document.getElementById('remb-resumen').innerHTML = `
+    <div class="resumen-linea" style="font-weight:800;font-size:1.1rem;color:#c62828">
+      Monto a reembolsar: <strong>${fmt(monto)}</strong>
+    </div>
+    <div style="font-size:.8rem;color:#888;margin-top:.3rem">
+      Tipo: ${tipoReembolso === 'total' ? 'Reembolso total' : 'Reembolso parcial'}
+    </div>
+  `;
+}
+ 
+async function guardarReembolso() {
+  const motivo = document.getElementById('remb-motivo').value.trim();
+  if (!motivo) { mostrarMensaje('Ingresa el motivo del reembolso.', 'error'); return; }
+ 
+  const itemsValidos = itemsReembolso.filter(i => i.cantidadSel > 0);
+  if (!itemsValidos.length) { mostrarMensaje('Selecciona al menos un producto.', 'error'); return; }
+ 
+  const monto = itemsValidos.reduce((s, i) => s + i.precio * i.cantidadSel, 0);
+  const msg   = tipoReembolso === 'total'
+    ? `¿Confirmar reembolso TOTAL de ${fmt(monto)}?\nLa venta quedará marcada como reembolsada.`
+    : `¿Confirmar reembolso parcial de ${fmt(monto)}?`;
+ 
+  if (!(await confirmar(msg))) return;
+ 
+  mostrarMensaje('Procesando reembolso...', 'info');
+  try {
+    const res = await apiPost('reembolsos', {
+      venta_id: ventaReembolsando.id,
+      tipo:     tipoReembolso,
+      motivo,
+      items: itemsValidos.map(i => ({
+        producto_id:   i.producto_id || null,
+        nombre:        i.nombre,
+        cantidad:      i.cantidadSel,
+        precio:        i.precio,
+        retorna_stock: i.retorna_stock
+      }))
+    });
+    if (!res.success) throw new Error(res.message);
+    mostrarMensaje(`✓ ${res.message}`);
+    cerrarModalReembolso();
+    cargarHistorial();
+  } catch (err) {
+    mostrarMensaje('Error: ' + err.message, 'error');
+  }
+}
+ 
+function cerrarModalReembolso() {
+  document.getElementById('modal-reembolso').classList.add('oculto');
+  ventaReembolsando = null;
+  itemsReembolso    = [];
+}
+ 
+// ── Exponer al scope global ───────────────────────────────────
+window.abrirCorreccion              = abrirCorreccion;
+window.cerrarModalCorreccion        = cerrarModalCorreccion;
+window.guardarCorreccion            = guardarCorreccion;
+window.eliminarItemCorreccion       = eliminarItemCorreccion;
+window.agregarProductoCorreccion    = agregarProductoCorreccion;
 window.actualizarEfectivoCorreccion = actualizarEfectivoCorreccion;
-window.recalcularCorreccion     = recalcularCorreccion;
-window.itemsCorreccion          = itemsCorreccion;
+window.recalcularCorreccion         = recalcularCorreccion;
+window.poblarSelectProductos        = poblarSelectProductos;
+window.itemsCorreccion              = itemsCorreccion;
+ 
+window.abrirReembolso    = abrirReembolso;
+window.cerrarModalReembolso = cerrarModalReembolso;
+window.guardarReembolso  = guardarReembolso;
+window.setTipoReembolso  = setTipoReembolso;
+window.recalcularReembolso = recalcularReembolso;
+window.itemsReembolso    = itemsReembolso;
  
 // ── Init ─────────────────────────────────────────────────────
 cargarHistorial();
