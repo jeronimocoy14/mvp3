@@ -81,8 +81,8 @@ async function crear(req, res) {
     const cambio = metodo_pago === 'Efectivo' ? Math.max(0, Number(recibido) - total) : 0;
  
     const [ventaResult] = await conn.query(
-      `INSERT INTO ventas (cliente_id, usuario_id, metodo_pago, subtotal, descuento_id, descuento_valor, total, recibido, cambio)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO ventas (cliente_id, usuario_id, metodo_pago, subtotal, descuento_id, descuento_valor, total, recibido, cambio, estado)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'cerrada')`,
       [cliente_id || null, usuario_id, metodo_pago, subtotal, descuento_id || null, descuento_valor, total, recibido, cambio]
     );
     const ventaId = ventaResult.insertId;
@@ -115,7 +115,7 @@ async function crear(req, res) {
  
 // PUT /api/ventas/:id/corregir — corrección de venta cerrada (solo admin)
 async function corregir(req, res) {
-  const { cliente_id, metodo_pago, items, descuento_id, recibido = 0 } = req.body;
+  const { cliente_id, metodo_pago, items, descuento_id, recibido = 0, motivo_correccion } = req.body;
   const ventaId    = req.params.id;
   const usuario_id = req.usuario.id;
  
@@ -126,13 +126,18 @@ async function corregir(req, res) {
   try {
     await conn.beginTransaction();
  
-    // Verificar que la venta existe
+    // Verificar que la venta existe y no está reembolsada
     const [ventaRows] = await conn.query('SELECT * FROM ventas WHERE id = ?', [ventaId]);
     if (!ventaRows.length) {
       await conn.rollback();
       return res.status(404).json({ success: false, message: 'Venta no encontrada.' });
     }
     const ventaOriginal = ventaRows[0];
+ 
+    if (ventaOriginal.estado === 'reembolsada') {
+      await conn.rollback();
+      return res.status(400).json({ success: false, message: 'No se puede corregir una venta reembolsada.' });
+    }
  
     // Restaurar stock de los items originales
     const [itemsOriginales] = await conn.query('SELECT * FROM venta_items WHERE venta_id = ?', [ventaId]);
@@ -167,7 +172,7 @@ async function corregir(req, res) {
     const total  = Math.max(0, subtotal - descuento_valor);
     const cambio = metodo_pago === 'Efectivo' ? Math.max(0, Number(recibido) - total) : 0;
  
-    // Actualizar la venta con marca de corrección
+    // Actualizar la venta — FIX: usar corregida_en (igual al schema) y setear estado='corregida'
     await conn.query(
       `UPDATE ventas SET
          cliente_id      = ?,
@@ -178,8 +183,10 @@ async function corregir(req, res) {
          total           = ?,
          recibido        = ?,
          cambio          = ?,
+         estado          = 'corregida',
          corregida_por   = ?,
-         fecha_correccion = NOW()
+         corregida_en    = NOW(),
+         motivo_correccion = ?
        WHERE id = ?`,
       [
         cliente_id || ventaOriginal.cliente_id,
@@ -191,6 +198,7 @@ async function corregir(req, res) {
         recibido,
         cambio,
         usuario_id,
+        motivo_correccion || null,
         ventaId
       ]
     );

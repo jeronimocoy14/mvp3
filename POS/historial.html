@@ -8,7 +8,8 @@
   <style>
     /* ── Cards de venta ── */
     .venta-card { background:#fff; border:1px solid #e0e0e0; border-radius:10px; padding:1rem 1.2rem; margin-bottom:1rem; }
-    .venta-card.venta-corregida { border-left:4px solid #f9a825; }
+    .venta-card.venta-corregida   { border-left:4px solid #f9a825; }
+    .venta-card.venta-reembolsada { border-left:4px solid #e53935; opacity:.85; }
     .venta-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.5rem; flex-wrap:wrap; gap:.3rem; }
     .venta-fecha  { font-size:.85rem; color:#888; }
     .venta-meta   { display:flex; gap:1rem; flex-wrap:wrap; font-size:.88rem; color:#555; margin-bottom:.4rem; }
@@ -16,38 +17,48 @@
     .venta-descuento { background:#fff8e1; border:1px solid #ffe082; border-radius:6px; padding:.3rem .7rem; font-size:.88rem; margin:.3rem 0; }
     .venta-efectivo  { font-size:.88rem; color:#1565c0; margin:.2rem 0; }
     .venta-items  { padding-left:1.2rem; margin:.5rem 0; font-size:.88rem; line-height:1.8; }
-    .venta-acciones { margin-top:.7rem; }
-    .badge-corregida { background:#fff3cd; color:#856404; border:1px solid #ffc107; border-radius:6px; padding:2px 8px; font-size:.78rem; margin-left:.5rem; }
+    .venta-acciones { margin-top:.7rem; display:flex; gap:.5rem; flex-wrap:wrap; }
+    .badge-corregida   { background:#fff3cd; color:#856404; border:1px solid #ffc107; border-radius:6px; padding:2px 8px; font-size:.78rem; margin-left:.5rem; }
+    .badge-reembolsada { background:#fdecea; color:#c62828; border:1px solid #ef9a9a; border-radius:6px; padding:2px 8px; font-size:.78rem; margin-left:.5rem; }
     .btn-sm { padding:.25rem .6rem; font-size:.82rem; }
  
     /* ── Resumen líneas ── */
     .resumen-linea { display:flex; justify-content:space-between; margin:.2rem 0; font-size:.92rem; }
  
-    /* ── Modal corrección ── */
+    /* ── Modal base ── */
     .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; display:flex; align-items:center; justify-content:center; padding:1rem; }
     .modal-overlay.oculto { display:none; }
     .modal-box { background:#fff; border-radius:12px; padding:1.5rem; width:100%; max-width:700px; max-height:90vh; overflow-y:auto; }
     .modal-box h2 { margin:0 0 .3rem; font-size:1.2rem; }
     .modal-box .subtitulo { font-size:.82rem; color:#888; margin-bottom:1rem; }
+    .modal-footer { display:flex; gap:.7rem; justify-content:flex-end; margin-top:1rem; flex-wrap:wrap; }
  
+    /* ── Modal corrección ── */
     .corr-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
     @media(max-width:600px) { .corr-grid { grid-template-columns:1fr; } }
- 
     .corr-item { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;
                  background:#f8f9fa; border-radius:8px; padding:.5rem .8rem; margin-bottom:.5rem; gap:.5rem; }
     .corr-item-nombre { font-weight:600; font-size:.9rem; }
     .corr-item-controles { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
     .corr-item-controles input { width:70px; padding:.25rem .4rem; border:1px solid #ccc; border-radius:5px; font-size:.88rem; }
- 
     .corr-seccion { margin-bottom:1rem; }
     .corr-seccion label { font-size:.85rem; font-weight:600; color:#555; display:block; margin-bottom:.3rem; }
     .corr-seccion select, .corr-seccion input { width:100%; padding:.4rem .6rem; border:1px solid #ccc; border-radius:6px; font-size:.9rem; }
- 
     #corr-resumen { background:#f0f4ff; border-radius:8px; padding:.8rem 1rem; margin:.8rem 0; }
-    .modal-footer { display:flex; gap:.7rem; justify-content:flex-end; margin-top:1rem; flex-wrap:wrap; }
- 
     .agregar-producto-row { display:flex; gap:.5rem; margin-top:.5rem; }
     .agregar-producto-row select { flex:1; padding:.35rem .5rem; border:1px solid #ccc; border-radius:6px; font-size:.88rem; }
+ 
+    /* ── Modal reembolso ── */
+    .remb-item { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;
+                 background:#f8f9fa; border-radius:8px; padding:.5rem .8rem; margin-bottom:.5rem; gap:.5rem; }
+    .remb-item-nombre { font-weight:600; font-size:.9rem; flex:1; }
+    .remb-item-controles { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+    .remb-item-controles input[type=number] { width:65px; padding:.25rem .4rem; border:1px solid #ccc; border-radius:5px; font-size:.88rem; }
+    .remb-item-controles label { font-size:.8rem; color:#555; display:flex; align-items:center; gap:.25rem; cursor:pointer; }
+    #remb-resumen { background:#fff3f3; border:1px solid #ffcdd2; border-radius:8px; padding:.8rem 1rem; margin:.8rem 0; }
+    .remb-tipo-btns { display:flex; gap:.5rem; margin-bottom:1rem; }
+    .remb-tipo-btns button { flex:1; padding:.4rem; border:1px solid #ccc; border-radius:6px; background:#f5f5f5; cursor:pointer; font-size:.9rem; }
+    .remb-tipo-btns button.activo { background:#e53935; color:#fff; border-color:#e53935; font-weight:700; }
   </style>
 </head>
 <body>
@@ -74,7 +85,7 @@
 <main class="contenedor-form">
   <section class="page-intro">
     <h1>Historial de ventas</h1>
-    <p class="subtitle">Consulta el detalle de cada venta. Los administradores pueden corregir ventas cerradas.</p>
+    <p class="subtitle">Consulta el detalle de cada venta. Los administradores pueden corregir ventas y gestionar reembolsos.</p>
   </section>
  
   <div id="mensaje" class="mensaje"></div>
@@ -92,12 +103,10 @@
     <p class="subtitulo" id="corr-original"></p>
  
     <div class="corr-grid">
-      <!-- Columna izquierda: productos -->
       <div>
         <div class="corr-seccion">
           <label>Productos de la venta</label>
           <div id="corr-items"></div>
- 
           <div class="agregar-producto-row">
             <select id="corr-producto-nuevo">
               <option value="">— Agregar producto —</option>
@@ -107,7 +116,6 @@
         </div>
       </div>
  
-      <!-- Columna derecha: datos de pago -->
       <div>
         <div class="corr-seccion">
           <label for="corr-cliente">Cliente</label>
@@ -115,7 +123,6 @@
             <option value="">— Sin cliente —</option>
           </select>
         </div>
- 
         <div class="corr-seccion">
           <label for="corr-metodo">Método de pago</label>
           <select id="corr-metodo" onchange="actualizarEfectivoCorreccion()">
@@ -125,20 +132,16 @@
             <option value="tarjeta">Tarjeta</option>
           </select>
         </div>
- 
         <div class="corr-seccion" id="corr-efectivo-box" style="display:none">
           <label for="corr-recibido">Valor recibido</label>
           <input type="number" id="corr-recibido" placeholder="0" oninput="recalcularCorreccion()">
         </div>
- 
         <div class="corr-seccion">
           <label for="corr-descuento">Descuento</label>
           <select id="corr-descuento" onchange="recalcularCorreccion()">
             <option value="">— Sin descuento —</option>
           </select>
         </div>
- 
-        <!-- Resumen recalculado en tiempo real -->
         <div id="corr-resumen"></div>
       </div>
     </div>
@@ -146,6 +149,36 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="cerrarModalCorreccion()">Cancelar</button>
       <button class="btn btn-primary"   onclick="guardarCorreccion()">Guardar corrección</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- ── Modal reembolso ── -->
+<div id="modal-reembolso" class="modal-overlay oculto">
+  <div class="modal-box">
+    <h2 id="remb-titulo">Reembolso de venta</h2>
+    <p class="subtitulo" id="remb-subtitulo"></p>
+ 
+    <div class="remb-tipo-btns">
+      <button id="btn-tipo-total"   class="activo" onclick="setTipoReembolso('total')">♻️ Reembolso total</button>
+      <button id="btn-tipo-parcial"             onclick="setTipoReembolso('parcial')">✂️ Reembolso parcial</button>
+    </div>
+ 
+    <div class="corr-seccion">
+      <label>Productos a reembolsar</label>
+      <div id="remb-items"></div>
+    </div>
+ 
+    <div class="corr-seccion">
+      <label for="remb-motivo">Motivo del reembolso</label>
+      <input type="text" id="remb-motivo" placeholder="Ej: Producto dañado, cliente insatisfecho...">
+    </div>
+ 
+    <div id="remb-resumen"></div>
+ 
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModalReembolso()">Cancelar</button>
+      <button class="btn btn-danger"    onclick="guardarReembolso()">Confirmar reembolso</button>
     </div>
   </div>
 </div>
@@ -162,9 +195,7 @@
 <script src="data.js"></script>
 <script src="historial.js"></script>
 <script>
-  // Poblar el select de productos cuando se abra el modal
   document.getElementById('modal-correccion').addEventListener('transitionend', poblarSelectProductos);
-  // Fallback: poblar cuando el modal se hace visible
   const observer = new MutationObserver(() => {
     if (!document.getElementById('modal-correccion').classList.contains('oculto')) {
       poblarSelectProductos();

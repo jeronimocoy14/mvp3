@@ -21,18 +21,20 @@
     <a href="Carrito.html"   class="btn btn-link">Carrito</a>
     <a href="compras.html"   class="btn btn-link">Compras</a>
     <a href="entidades.html" class="btn btn-link">Entidades</a>
+    <a href="descuentos.html" class="btn btn-link">Descuentos</a>
+    <a href="faltantes.html"  class="btn btn-link">Faltantes</a>
     <div id="user-badge" class="user-badge"></div>
   </nav>
 </header>
-
+ 
 <main class="contenedor-form">
   <section class="page-intro">
     <h1>Gestión de productos</h1>
     <p class="subtitle">Agrega nuevos artículos, edita precios y controla el stock desde un panel claro y eficiente.</p>
   </section>
-
+ 
   <div id="mensaje"></div>
-
+ 
   <!-- Modal: todos los botones e input empiezan ocultos -->
   <div id="modal-overlay" class="oculto">
     <div class="modal-box">
@@ -47,7 +49,7 @@
       </div>
     </div>
   </div>
-
+ 
   <div class="form-grid">
     <input id="nombre"    placeholder="Nombre del producto">
     <input id="precio"    type="number" placeholder="Precio de venta">
@@ -59,19 +61,19 @@
     <datalist id="proveedores-datalist"></datalist>
     <input id="imagen" type="url" placeholder="URL de la imagen">
   </div>
-
+ 
   <div class="form-row">
     <button class="btn btn-primary"   onclick="crear()">Crear producto</button>
     <button class="btn btn-secondary" onclick="cancelar()">Cancelar</button>
   </div>
-
+ 
   <div id="lista"></div>
-
+ 
   <div class="footer-links">
     <button id="volver" class="btn btn-secondary">Volver a la página principal</button>
   </div>
 </main>
-
+ 
 <script src="auth.js"></script>
 <script>Auth.requireLogin();</script>
 <script src="data.js"></script>

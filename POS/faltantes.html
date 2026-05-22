@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faltantes - Papel y Luna</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .faltantes-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+    @media(max-width:768px) { .faltantes-grid { grid-template-columns:1fr; } }
+ 
+    /* Cards */
+    .falt-card { background:#fff; border:1px solid #e0e0e0; border-radius:10px; padding:1rem 1.2rem; display:flex; flex-direction:column; gap:.4rem; }
+    .falt-card.resuelto { opacity:.6; border-style:dashed; border-color:#a5d6a7; }
+    .falt-card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; }
+    .falt-card-nombre { font-size:1.05rem; font-weight:700; color:#2d2d2d; }
+    .falt-card-meta   { font-size:.83rem; color:#777; display:flex; gap:.8rem; flex-wrap:wrap; }
+    .falt-card-acciones { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.4rem; }
+ 
+    .badge-pendiente { background:#fff3cd; color:#856404; border:1px solid #ffc107; border-radius:6px; padding:2px 9px; font-size:.78rem; }
+    .badge-resuelto  { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; border-radius:6px; padding:2px 9px; font-size:.78rem; }
+ 
+    /* Filtros */
+    .filtros-bar { display:flex; gap:.7rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem; }
+    .filtros-bar select, .filtros-bar input { padding:.35rem .6rem; border:1px solid #ccc; border-radius:6px; font-size:.9rem; }
+ 
+    /* Formulario */
+    #form-faltante { background:#f8f9fa; border:1px solid #dee2e6; border-radius:10px; padding:1.2rem; }
+    #form-faltante h3 { margin:0 0 1rem; color:#333; }
+    .form-group { display:flex; flex-direction:column; gap:.3rem; margin-bottom:.8rem; }
+    .form-group label { font-size:.85rem; font-weight:600; color:#555; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding:.45rem .7rem; border:1px solid #ccc; border-radius:6px; font-size:.95rem;
+    }
+    .form-row { display:flex; gap:1rem; flex-wrap:wrap; }
+    .form-row .form-group { flex:1; min-width:130px; }
+    .lista-vacia { text-align:center; color:#999; padding:2rem; font-size:.95rem; }
+  </style>
+</head>
+<body>
+ 
+<header class="app-header">
+  <div class="header-brand">
+    <img src="Logo.png" alt="Papel y Luna" class="logo">
+    <div>
+      <h1>Papel y Luna</h1>
+      <p class="subtitle">Productos faltantes</p>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <a href="PapelLuna.html"  class="btn btn-link">Nueva venta</a>
+    <a href="productos.html"  class="btn btn-link">Productos</a>
+    <a href="historial.html"  class="btn btn-link">Historial</a>
+    <a href="compras.html"    class="btn btn-link">Compras</a>
+    <a href="entidades.html"  class="btn btn-link">Entidades</a>
+    <a href="descuentos.html" class="btn btn-link">Descuentos</a>
+    <a href="faltantes.html"  class="btn btn-link">Faltantes</a>
+    <div id="user-badge" class="user-badge"></div>
+  </nav>
+</header>
+ 
+<main class="contenedor-form">
+  <section class="page-intro">
+    <h1>Productos faltantes</h1>
+    <p class="subtitle">Registra los productos que hacen falta pedir. Márcalos como resueltos cuando se consigan.</p>
+  </section>
+ 
+  <div id="mensaje" class="mensaje"></div>
+ 
+  <div class="faltantes-grid">
+ 
+    <!-- Panel izquierdo: formulario -->
+    <div>
+      <div id="form-faltante">
+        <h3 id="form-titulo">Registrar faltante</h3>
+ 
+        <div class="form-group">
+          <label for="inp-nombre">Producto *</label>
+          <input id="inp-nombre" type="text" placeholder="Ej: Marcadores punta fina" maxlength="150">
+        </div>
+ 
+        <div class="form-row">
+          <div class="form-group">
+            <label for="inp-cantidad">Cantidad estimada</label>
+            <input id="inp-cantidad" type="number" min="1" value="1" placeholder="1">
+          </div>
+          <div class="form-group">
+            <label for="inp-tipo">Categoría / tipo</label>
+            <input id="inp-tipo" type="text" placeholder="Ej: papelería, útiles..." maxlength="100">
+          </div>
+        </div>
+ 
+        <div class="form-group">
+          <label for="inp-proveedor">Proveedor</label>
+          <select id="inp-proveedor">
+            <option value="">— Sin proveedor —</option>
+          </select>
+        </div>
+ 
+        <div class="form-group">
+          <label for="inp-descripcion">Descripción / notas</label>
+          <textarea id="inp-descripcion" rows="2" placeholder="Notas adicionales..."></textarea>
+        </div>
+ 
+        <div style="display:flex; gap:.7rem; margin-top:.5rem;">
+          <button class="btn btn-primary"   onclick="guardarFaltante()">Guardar</button>
+          <button class="btn btn-secondary" onclick="cancelarEdicion()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- Panel derecho: lista con filtros -->
+    <div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.8rem; flex-wrap:wrap; gap:.5rem;">
+        <h2 style="margin:0;">Faltantes registrados</h2>
+      </div>
+ 
+      <!-- Filtros -->
+      <div class="filtros-bar">
+        <select id="filtro-estado" onchange="cargarFaltantes()">
+          <option value="pendientes">Solo pendientes</option>
+          <option value="resueltos">Solo resueltos</option>
+          <option value="todos">Todos</option>
+        </select>
+        <select id="filtro-proveedor" onchange="cargarFaltantes()">
+          <option value="">Todos los proveedores</option>
+        </select>
+        <input id="filtro-tipo" type="text" placeholder="Filtrar por tipo..." oninput="filtrarPorTipo()">
+      </div>
+ 
+      <div id="lista-faltantes"><p class="lista-vacia">Cargando...</p></div>
+    </div>
+ 
+  </div>
+</main>
+ 
+<footer>
+  <p>© 2026 Papel y Luna. Todos los derechos reservados.</p>
+  <p><strong>Dirección:</strong> Calle 10 #5-35, Chía, Cundinamarca</p>
+  <p><strong>Teléfono:</strong> 350 884 1010</p>
+  <p><strong>Horarios:</strong> Lun–Vie: 7am–8pm · Sáb–Dom: 9am–6pm</p>
+</footer>
+ 
+<script src="auth.js"></script>
+<script>Auth.requireLogin();</script>
+<script src="data.js"></script>
+<script>
+let editandoId  = null;
+let faltantes   = [];
+let proveedores = [];
+ 
+document.addEventListener('DOMContentLoaded', async () => {
+  await cargarProveedores();
+  await cargarFaltantes();
+});
+ 
+// ── Proveedores ───────────────────────────────────────────────
+async function cargarProveedores() {
+  try {
+    const res = await apiGet('proveedores');
+    proveedores = res.data || [];
+ 
+    const selForm = document.getElementById('inp-proveedor');
+    const selFilt = document.getElementById('filtro-proveedor');
+ 
+    proveedores.forEach(p => {
+      const opt1 = new Option(p.nombre, p.id);
+      const opt2 = new Option(p.nombre, p.id);
+      selForm.appendChild(opt1);
+      selFilt.appendChild(opt2);
+    });
+  } catch (err) {
+    console.warn('No se cargaron proveedores:', err.message);
+  }
+}
+ 
+// ── Cargar faltantes ──────────────────────────────────────────
+async function cargarFaltantes() {
+  const lista  = document.getElementById('lista-faltantes');
+  const estado = document.getElementById('filtro-estado').value;
+  const provId = document.getElementById('filtro-proveedor').value;
+ 
+  let query = '';
+  if (estado === 'pendientes') query += 'resuelto=false';
+  if (estado === 'resueltos')  query += 'resuelto=true';
+  if (provId) query += (query ? '&' : '') + `proveedor_id=${provId}`;
+ 
+  try {
+    const res = await apiGet('faltantes' + (query ? '?' + query : ''));
+    if (!res.success) throw new Error(res.message);
+    faltantes = res.data || [];
+    renderFaltantes(faltantes);
+  } catch (err) {
+    lista.innerHTML = `<p class="lista-vacia">Error: ${err.message}</p>`;
+  }
+}
+ 
+// Filtro local por tipo (sin llamar al backend)
+function filtrarPorTipo() {
+  const texto = document.getElementById('filtro-tipo').value.toLowerCase();
+  const filtrados = texto
+    ? faltantes.filter(f => (f.tipo || '').toLowerCase().includes(texto) || f.nombre.toLowerCase().includes(texto))
+    : faltantes;
+  renderFaltantes(filtrados);
+}
+ 
+// ── Render lista ──────────────────────────────────────────────
+function renderFaltantes(lista) {
+  const cont    = document.getElementById('lista-faltantes');
+  const usuario = Auth.getUsuario();
+  const esAdmin = usuario?.rol === 'admin';
+ 
+  if (!lista.length) {
+    cont.innerHTML = '<p class="lista-vacia">No hay faltantes con estos filtros.</p>';
+    return;
+  }
+ 
+  cont.innerHTML = lista.map(f => {
+    const badge = f.resuelto
+      ? `<span class="badge-resuelto">✅ Resuelto</span>`
+      : `<span class="badge-pendiente">⏳ Pendiente</span>`;
+ 
+    const fecha = f.resuelto && f.resuelto_en
+      ? `<span>Resuelto: ${new Date(f.resuelto_en).toLocaleDateString('es-CO')}</span>`
+      : `<span>Registrado: ${new Date(f.creado_en).toLocaleDateString('es-CO')}</span>`;
+ 
+    const acciones = !f.resuelto ? `
+      ${esAdmin || true ? `<button class="btn btn-secondary btn-sm" onclick="editarFaltante(${f.id})">✏️ Editar</button>` : ''}
+      <button class="btn btn-primary btn-sm" onclick="resolverFaltante(${f.id})">✅ Marcar resuelto</button>
+      ${esAdmin ? `<button class="btn btn-danger btn-sm" onclick="eliminarFaltante(${f.id})">🗑️ Eliminar</button>` : ''}
+    ` : `
+      ${esAdmin ? `<button class="btn btn-danger btn-sm" onclick="eliminarFaltante(${f.id})">🗑️ Eliminar</button>` : ''}
+    `;
+ 
+    return `
+      <div class="falt-card ${f.resuelto ? 'resuelto' : ''}">
+        <div class="falt-card-header">
+          <span class="falt-card-nombre">${f.nombre}</span>
+          ${badge}
+        </div>
+        <div class="falt-card-meta">
+          <span>📦 Cantidad: ${f.cantidad_est}</span>
+          ${f.tipo           ? `<span>🏷️ ${f.tipo}</span>` : ''}
+          ${f.proveedorNombre ? `<span>🏢 ${f.proveedorNombre}</span>` : ''}
+          ${fecha}
+        </div>
+        ${f.descripcion ? `<div style="font-size:.85rem;color:#555">${f.descripcion}</div>` : ''}
+        <div class="falt-card-acciones">${acciones}</div>
+      </div>
+    `;
+  }).join('');
+}
+ 
+// ── Guardar (crear o editar) ──────────────────────────────────
+async function guardarFaltante() {
+  const nombre      = document.getElementById('inp-nombre').value.trim();
+  const cantidad    = Number(document.getElementById('inp-cantidad').value) || 1;
+  const tipo        = document.getElementById('inp-tipo').value.trim();
+  const proveedor   = document.getElementById('inp-proveedor').value;
+  const descripcion = document.getElementById('inp-descripcion').value.trim();
+ 
+  if (!nombre) return mostrarMensaje('El nombre del producto es obligatorio.', 'error');
+ 
+  const body = { nombre, cantidad_est: cantidad, tipo: tipo || null, proveedor_id: proveedor || null, descripcion: descripcion || null };
+ 
+  try {
+    const res = editandoId
+      ? await apiPut('faltantes', editandoId, body)
+      : await apiPost('faltantes', body);
+    if (!res.success) throw new Error(res.message);
+    mostrarMensaje(res.message || (editandoId ? 'Faltante actualizado.' : 'Faltante registrado.'));
+    cancelarEdicion();
+    cargarFaltantes();
+  } catch (err) {
+    mostrarMensaje('Error: ' + err.message, 'error');
+  }
+}
+ 
+// ── Editar ────────────────────────────────────────────────────
+function editarFaltante(id) {
+  const f = faltantes.find(x => x.id === id);
+  if (!f) return;
+  editandoId = id;
+  document.getElementById('form-titulo').textContent    = 'Editar faltante';
+  document.getElementById('inp-nombre').value           = f.nombre;
+  document.getElementById('inp-cantidad').value         = f.cantidad_est;
+  document.getElementById('inp-tipo').value             = f.tipo || '';
+  document.getElementById('inp-proveedor').value        = f.proveedor_id || '';
+  document.getElementById('inp-descripcion').value      = f.descripcion || '';
+  document.getElementById('form-faltante').scrollIntoView({ behavior: 'smooth' });
+}
+ 
+function cancelarEdicion() {
+  editandoId = null;
+  document.getElementById('form-titulo').textContent  = 'Registrar faltante';
+  document.getElementById('inp-nombre').value         = '';
+  document.getElementById('inp-cantidad').value       = '1';
+  document.getElementById('inp-tipo').value           = '';
+  document.getElementById('inp-proveedor').value      = '';
+  document.getElementById('inp-descripcion').value    = '';
+}
+ 
+// ── Resolver ──────────────────────────────────────────────────
+async function resolverFaltante(id) {
+  const f = faltantes.find(x => x.id === id);
+  if (!f) return;
+  if (!(await confirmar(`¿Marcar "${f.nombre}" como resuelto?`))) return;
+  try {
+    const res = await apiPatch(`faltantes/${id}/resolver`, {});
+    if (!res.success) throw new Error(res.message);
+    mostrarMensaje('✅ ' + res.message);
+    cargarFaltantes();
+  } catch (err) {
+    mostrarMensaje('Error: ' + err.message, 'error');
+  }
+}
+ 
+// ── Eliminar ──────────────────────────────────────────────────
+async function eliminarFaltante(id) {
+  const f = faltantes.find(x => x.id === id);
+  if (!f) return;
+  if (!(await confirmar(`¿Eliminar el faltante "${f.nombre}"?\nEsta acción no se puede deshacer.`))) return;
+  try {
+    const res = await apiDelete('faltantes', id);
+    if (!res.success) throw new Error(res.message);
+    mostrarMensaje('Faltante eliminado.');
+    cargarFaltantes();
+  } catch (err) {
+    mostrarMensaje('Error: ' + err.message, 'error');
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reportes - Papel y Luna</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Tabs ── */
+    .tabs { display:flex; gap:.3rem; border-bottom:2px solid #e0e0e0; margin-bottom:1.5rem; flex-wrap:wrap; }
+    .tab-btn { padding:.5rem 1.2rem; border:none; background:none; cursor:pointer; font-size:.95rem;
+               color:#666; border-bottom:3px solid transparent; margin-bottom:-2px; border-radius:6px 6px 0 0; }
+    .tab-btn:hover  { background:#f5f5f5; color:#333; }
+    .tab-btn.activo { color:#1565c0; font-weight:700; border-bottom-color:#1565c0; background:#f0f4ff; }
+ 
+    .tab-panel { display:none; }
+    .tab-panel.activo { display:block; }
+ 
+    /* ── Filtros de fecha ── */
+    .filtro-fechas { display:flex; gap:.8rem; align-items:flex-end; flex-wrap:wrap;
+                     background:#f8f9fa; border:1px solid #dee2e6; border-radius:10px;
+                     padding:1rem 1.2rem; margin-bottom:1.5rem; }
+    .filtro-fechas .form-group { display:flex; flex-direction:column; gap:.3rem; }
+    .filtro-fechas label { font-size:.82rem; font-weight:600; color:#555; }
+    .filtro-fechas input[type=date] { padding:.4rem .6rem; border:1px solid #ccc; border-radius:6px; font-size:.9rem; }
+ 
+    /* ── Tarjetas KPI ── */
+    .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:1rem; margin-bottom:1.5rem; }
+    .kpi-card { background:#fff; border:1px solid #e0e0e0; border-radius:10px; padding:1rem 1.2rem;
+                text-align:center; }
+    .kpi-card .kpi-valor { font-size:1.5rem; font-weight:800; color:#1565c0; }
+    .kpi-card .kpi-label { font-size:.8rem; color:#777; margin-top:.2rem; }
+    .kpi-card.verde .kpi-valor { color:#2e7d32; }
+    .kpi-card.rojo  .kpi-valor { color:#c62828; }
+    .kpi-card.naranja .kpi-valor { color:#e65100; }
+ 
+    /* ── Tablas ── */
+    .reporte-tabla { width:100%; border-collapse:collapse; font-size:.9rem; margin-top:.5rem; }
+    .reporte-tabla th { background:#f0f4ff; color:#1565c0; padding:.5rem .8rem;
+                        text-align:left; font-size:.82rem; border-bottom:2px solid #c5cae9; }
+    .reporte-tabla td { padding:.45rem .8rem; border-bottom:1px solid #f0f0f0; }
+    .reporte-tabla tr:hover td { background:#fafafa; }
+    .reporte-tabla .num { text-align:right; font-variant-numeric:tabular-nums; }
+ 
+    /* ── Barras de progreso ── */
+    .barra-wrap { display:flex; align-items:center; gap:.6rem; }
+    .barra-bg   { flex:1; background:#e8eaf6; border-radius:4px; height:8px; overflow:hidden; }
+    .barra-fill { height:100%; background:#1565c0; border-radius:4px; transition:width .4s; }
+ 
+    /* ── Sección con título ── */
+    .reporte-seccion { margin-bottom:2rem; }
+    .reporte-seccion h3 { font-size:1rem; color:#333; margin:0 0 .8rem; padding-bottom:.4rem;
+                          border-bottom:1px solid #e0e0e0; }
+ 
+    /* ── Estado vacío / cargando ── */
+    .estado-info { text-align:center; color:#999; padding:2rem; font-size:.95rem; }
+ 
+    /* ── Método de pago badges ── */
+    .badge-metodo { display:inline-block; padding:2px 8px; border-radius:12px; font-size:.78rem; font-weight:600; }
+    .badge-Efectivo { background:#e8f5e9; color:#2e7d32; }
+    .badge-Nequi    { background:#fce4ec; color:#880e4f; }
+    .badge-tarjeta  { background:#e3f2fd; color:#1565c0; }
+ 
+    .btn-sm { padding:.3rem .7rem; font-size:.85rem; }
+  </style>
+</head>
+<body>
+ 
+<header class="app-header">
+  <div class="header-brand">
+    <img src="Logo.png" alt="Papel y Luna" class="logo">
+    <div>
+      <h1>Papel y Luna</h1>
+      <p class="subtitle">Reportes</p>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <a href="PapelLuna.html"  class="btn btn-link">Nueva venta</a>
+    <a href="productos.html"  class="btn btn-link">Productos</a>
+    <a href="historial.html"  class="btn btn-link">Historial</a>
+    <a href="compras.html"    class="btn btn-link">Compras</a>
+    <a href="entidades.html"  class="btn btn-link">Entidades</a>
+    <a href="descuentos.html" class="btn btn-link">Descuentos</a>
+    <a href="faltantes.html"  class="btn btn-link">Faltantes</a>
+    <a href="reportes.html"   class="btn btn-link">Reportes</a>
+    <div id="user-badge" class="user-badge"></div>
+  </nav>
+</header>
+ 
+<main class="contenedor-form">
+  <section class="page-intro">
+    <h1>Reportes</h1>
+    <p class="subtitle">Consulta el desempeño del negocio por período de tiempo.</p>
+  </section>
+ 
+  <div id="mensaje" class="mensaje"></div>
+ 
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn activo" onclick="cambiarTab('ventas')">📊 Ventas</button>
+    <button class="tab-btn"       onclick="cambiarTab('productos')">📦 Productos</button>
+    <button class="tab-btn"       onclick="cambiarTab('compras')">🛒 Compras</button>
+    <button class="tab-btn"       onclick="cambiarTab('faltantes')">⚠️ Faltantes</button>
+  </div>
+ 
+  <!-- ── TAB VENTAS ── -->
+  <div id="tab-ventas" class="tab-panel activo">
+    <div class="filtro-fechas">
+      <div class="form-group">
+        <label for="v-desde">Desde</label>
+        <input type="date" id="v-desde">
+      </div>
+      <div class="form-group">
+        <label for="v-hasta">Hasta</label>
+        <input type="date" id="v-hasta">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="cargarReporteVentas()">Consultar</button>
+    </div>
+    <div id="reporte-ventas"><p class="estado-info">Selecciona un rango de fechas y presiona Consultar.</p></div>
+  </div>
+ 
+  <!-- ── TAB PRODUCTOS ── -->
+  <div id="tab-productos" class="tab-panel">
+    <div class="filtro-fechas">
+      <div class="form-group">
+        <label for="p-desde">Desde</label>
+        <input type="date" id="p-desde">
+      </div>
+      <div class="form-group">
+        <label for="p-hasta">Hasta</label>
+        <input type="date" id="p-hasta">
+      </div>
+      <div class="form-group">
+        <label for="p-limite">Top</label>
+        <select id="p-limite" style="padding:.4rem .6rem;border:1px solid #ccc;border-radius:6px;font-size:.9rem;">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="cargarReporteProductos()">Consultar</button>
+    </div>
+    <div id="reporte-productos"><p class="estado-info">Selecciona un rango de fechas y presiona Consultar.</p></div>
+  </div>
+ 
+  <!-- ── TAB COMPRAS ── -->
+  <div id="tab-compras" class="tab-panel">
+    <div class="filtro-fechas">
+      <div class="form-group">
+        <label for="c-desde">Desde</label>
+        <input type="date" id="c-desde">
+      </div>
+      <div class="form-group">
+        <label for="c-hasta">Hasta</label>
+        <input type="date" id="c-hasta">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="cargarReporteCompras()">Consultar</button>
+    </div>
+    <div id="reporte-compras"><p class="estado-info">Selecciona un rango de fechas y presiona Consultar.</p></div>
+  </div>
+ 
+  <!-- ── TAB FALTANTES ── -->
+  <div id="tab-faltantes" class="tab-panel">
+    <div style="margin-bottom:1rem;">
+      <button class="btn btn-primary btn-sm" onclick="cargarReporteFaltantes()">🔄 Actualizar</button>
+    </div>
+    <div id="reporte-faltantes"><p class="estado-info">Presiona Actualizar para cargar el reporte.</p></div>
+  </div>
+ 
+</main>
+ 
+<footer>
+  <p>© 2026 Papel y Luna. Todos los derechos reservados.</p>
+  <p><strong>Dirección:</strong> Calle 10 #5-35, Chía, Cundinamarca</p>
+  <p><strong>Teléfono:</strong> 350 884 1010</p>
+  <p><strong>Horarios:</strong> Lun–Vie: 7am–8pm · Sáb–Dom: 9am–6pm</p>
+</footer>
+ 
+<script src="auth.js"></script>
+<script>Auth.requireLogin();</script>
+<script src="data.js"></script>
+<script>
+ 
+const fmt  = v => Number(v || 0).toLocaleString('es-CO', { style:'currency', currency:'COP', maximumFractionDigits:0 });
+const fmtN = v => Number(v || 0).toLocaleString('es-CO');
+ 
+// ── Fechas por defecto: mes actual ────────────────────────────
+function inicializarFechas() {
+  const hoy    = new Date();
+  const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  const isoHoy   = hoy.toISOString().slice(0, 10);
+  const isoInicio = inicio.toISOString().slice(0, 10);
+ 
+  ['v-desde','p-desde','c-desde'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = isoInicio;
+  });
+  ['v-hasta','p-hasta','c-hasta'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = isoHoy;
+  });
+}
+ 
+// ── Cambio de tabs ────────────────────────────────────────────
+function cambiarTab(nombre) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('activo', b.getAttribute('onclick').includes(nombre));
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('activo', p.id === 'tab-' + nombre);
+  });
+}
+ 
+// ════════════════════════════════════════════════════════════
+// REPORTE VENTAS
+// ════════════════════════════════════════════════════════════
+async function cargarReporteVentas() {
+  const desde = document.getElementById('v-desde').value;
+  const hasta = document.getElementById('v-hasta').value;
+  const cont  = document.getElementById('reporte-ventas');
+  if (!desde || !hasta) return mostrarMensaje('Selecciona el rango de fechas.', 'error');
+ 
+  cont.innerHTML = '<p class="estado-info">Cargando...</p>';
+  try {
+    const res = await apiGet(`reportes/ventas?desde=${desde}&hasta=${hasta}`);
+    if (!res.success) throw new Error(res.message);
+    const { resumen, porDia, porMetodo } = res.data;
+ 
+    const maxDia = porDia.length ? Math.max(...porDia.map(d => Number(d.total))) : 1;
+ 
+    cont.innerHTML = `
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-valor">${fmtN(resumen.total_ventas)}</div>
+          <div class="kpi-label">Ventas realizadas</div>
+        </div>
+        <div class="kpi-card verde">
+          <div class="kpi-valor">${fmt(resumen.ingresos_totales)}</div>
+          <div class="kpi-label">Ingresos totales</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-valor">${fmt(resumen.ticket_promedio)}</div>
+          <div class="kpi-label">Ticket promedio</div>
+        </div>
+        <div class="kpi-card rojo">
+          <div class="kpi-valor">${fmt(resumen.descuentos_aplicados)}</div>
+          <div class="kpi-label">Descuentos aplicados</div>
+        </div>
+      </div>
+ 
+      <!-- Por método de pago -->
+      <div class="reporte-seccion">
+        <h3>Por método de pago</h3>
+        ${porMetodo.length ? `
+          <table class="reporte-tabla">
+            <thead><tr><th>Método</th><th class="num">Transacciones</th><th class="num">Total</th></tr></thead>
+            <tbody>
+              ${porMetodo.map(m => `
+                <tr>
+                  <td><span class="badge-metodo badge-${m.metodo_pago}">${m.metodo_pago}</span></td>
+                  <td class="num">${fmtN(m.cantidad)}</td>
+                  <td class="num">${fmt(m.total)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : '<p class="estado-info">Sin datos en este período.</p>'}
+      </div>
+ 
+      <!-- Por día -->
+      <div class="reporte-seccion">
+        <h3>Ventas por día</h3>
+        ${porDia.length ? `
+          <table class="reporte-tabla">
+            <thead><tr><th>Fecha</th><th class="num">Ventas</th><th>Ingresos</th></tr></thead>
+            <tbody>
+              ${porDia.map(d => {
+                const pct = maxDia > 0 ? Math.round((Number(d.total) / maxDia) * 100) : 0;
+                return `
+                  <tr>
+                    <td>${new Date(d.dia + 'T12:00:00').toLocaleDateString('es-CO', { weekday:'short', day:'numeric', month:'short' })}</td>
+                    <td class="num">${d.ventas}</td>
+                    <td>
+                      <div class="barra-wrap">
+                        <div class="barra-bg"><div class="barra-fill" style="width:${pct}%"></div></div>
+                        <span style="font-size:.85rem;min-width:90px;text-align:right">${fmt(d.total)}</span>
+                      </div>
+                    </td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        ` : '<p class="estado-info">Sin ventas en este período.</p>'}
+      </div>
+    `;
+  } catch (err) {
+    cont.innerHTML = `<p class="estado-info">Error: ${err.message}</p>`;
+  }
+}
+ 
+// ════════════════════════════════════════════════════════════
+// REPORTE PRODUCTOS
+// ════════════════════════════════════════════════════════════
+async function cargarReporteProductos() {
+  const desde  = document.getElementById('p-desde').value;
+  const hasta  = document.getElementById('p-hasta').value;
+  const limite = document.getElementById('p-limite').value;
+  const cont   = document.getElementById('reporte-productos');
+  if (!desde || !hasta) return mostrarMensaje('Selecciona el rango de fechas.', 'error');
+ 
+  cont.innerHTML = '<p class="estado-info">Cargando...</p>';
+  try {
+    const res = await apiGet(`reportes/productos?desde=${desde}&hasta=${hasta}&limite=${limite}`);
+    if (!res.success) throw new Error(res.message);
+    const productos = res.data;
+    const maxUnidades = productos.length ? Math.max(...productos.map(p => Number(p.unidades_vendidas))) : 1;
+ 
+    cont.innerHTML = !productos.length
+      ? '<p class="estado-info">Sin ventas de productos en este período.</p>'
+      : `
+        <div class="reporte-seccion">
+          <h3>Top ${limite} productos más vendidos</h3>
+          <table class="reporte-tabla">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Producto</th>
+                <th>Unidades vendidas</th>
+                <th class="num">Ingresos</th>
+                <th class="num">En # ventas</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${productos.map((p, i) => {
+                const pct = Math.round((Number(p.unidades_vendidas) / maxUnidades) * 100);
+                return `
+                  <tr>
+                    <td style="color:#999;font-size:.85rem">${i + 1}</td>
+                    <td><strong>${p.nombre}</strong></td>
+                    <td>
+                      <div class="barra-wrap">
+                        <div class="barra-bg"><div class="barra-fill" style="width:${pct}%"></div></div>
+                        <span style="font-size:.85rem;min-width:40px;text-align:right">${fmtN(p.unidades_vendidas)}</span>
+                      </div>
+                    </td>
+                    <td class="num">${fmt(p.ingresos_generados)}</td>
+                    <td class="num">${fmtN(p.aparece_en_ventas)}</td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+  } catch (err) {
+    cont.innerHTML = `<p class="estado-info">Error: ${err.message}</p>`;
+  }
+}
+ 
+// ════════════════════════════════════════════════════════════
+// REPORTE COMPRAS
+// ════════════════════════════════════════════════════════════
+async function cargarReporteCompras() {
+  const desde = document.getElementById('c-desde').value;
+  const hasta = document.getElementById('c-hasta').value;
+  const cont  = document.getElementById('reporte-compras');
+  if (!desde || !hasta) return mostrarMensaje('Selecciona el rango de fechas.', 'error');
+ 
+  cont.innerHTML = '<p class="estado-info">Cargando...</p>';
+  try {
+    const res = await apiGet(`reportes/compras?desde=${desde}&hasta=${hasta}`);
+    if (!res.success) throw new Error(res.message);
+    const { resumen, porProveedor, detalle } = res.data;
+ 
+    cont.innerHTML = `
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-valor">${fmtN(resumen.total_compras)}</div>
+          <div class="kpi-label">Órdenes de compra</div>
+        </div>
+        <div class="kpi-card naranja">
+          <div class="kpi-valor">${fmt(resumen.gasto_total)}</div>
+          <div class="kpi-label">Gasto total</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-valor">${fmt(resumen.promedio_por_compra)}</div>
+          <div class="kpi-label">Promedio por compra</div>
+        </div>
+      </div>
+ 
+      <!-- Por proveedor -->
+      <div class="reporte-seccion">
+        <h3>Por proveedor</h3>
+        ${porProveedor.length ? `
+          <table class="reporte-tabla">
+            <thead><tr><th>Proveedor</th><th class="num">Compras</th><th class="num">Total gastado</th></tr></thead>
+            <tbody>
+              ${porProveedor.map(p => `
+                <tr>
+                  <td>${p.proveedor}</td>
+                  <td class="num">${p.compras}</td>
+                  <td class="num">${fmt(p.total)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : '<p class="estado-info">Sin compras en este período.</p>'}
+      </div>
+ 
+      <!-- Detalle -->
+      <div class="reporte-seccion">
+        <h3>Detalle de compras</h3>
+        ${detalle.length ? `
+          <table class="reporte-tabla">
+            <thead><tr><th>#</th><th>Fecha</th><th>Proveedor</th><th>Usuario</th><th class="num">Total</th></tr></thead>
+            <tbody>
+              ${detalle.map(c => `
+                <tr>
+                  <td style="color:#999">${c.id}</td>
+                  <td>${new Date(c.fecha).toLocaleDateString('es-CO')}</td>
+                  <td>${c.proveedor || '—'}</td>
+                  <td>${c.usuario  || '—'}</td>
+                  <td class="num">${fmt(c.total)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : '<p class="estado-info">Sin compras en este período.</p>'}
+      </div>
+    `;
+  } catch (err) {
+    cont.innerHTML = `<p class="estado-info">Error: ${err.message}</p>`;
+  }
+}
+ 
+// ════════════════════════════════════════════════════════════
+// REPORTE FALTANTES
+// ════════════════════════════════════════════════════════════
+async function cargarReporteFaltantes() {
+  const cont = document.getElementById('reporte-faltantes');
+  cont.innerHTML = '<p class="estado-info">Cargando...</p>';
+  try {
+    const res = await apiGet('reportes/faltantes');
+    if (!res.success) throw new Error(res.message);
+    const { stats, frecuentes, pendientes } = res.data;
+ 
+    cont.innerHTML = `
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-valor">${fmtN(stats.total_registrados)}</div>
+          <div class="kpi-label">Total registrados</div>
+        </div>
+        <div class="kpi-card rojo">
+          <div class="kpi-valor">${fmtN(stats.pendientes)}</div>
+          <div class="kpi-label">Pendientes</div>
+        </div>
+        <div class="kpi-card verde">
+          <div class="kpi-valor">${fmtN(stats.resueltos)}</div>
+          <div class="kpi-label">Resueltos</div>
+        </div>
+      </div>
+ 
+      <!-- Más frecuentes -->
+      <div class="reporte-seccion">
+        <h3>Productos más solicitados como faltantes</h3>
+        ${frecuentes.length ? `
+          <table class="reporte-tabla">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th class="num">Veces registrado</th>
+                <th class="num">Cantidad total solicitada</th>
+                <th>Último registro</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${frecuentes.map(f => `
+                <tr>
+                  <td><strong>${f.nombre}</strong></td>
+                  <td>${f.tipo || '—'}</td>
+                  <td class="num">${f.veces_registrado}</td>
+                  <td class="num">${fmtN(f.cantidad_total_solicitada)}</td>
+                  <td style="font-size:.83rem;color:#666">${new Date(f.ultimo_registro).toLocaleDateString('es-CO')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : '<p class="estado-info">No hay faltantes registrados.</p>'}
+      </div>
+ 
+      <!-- Pendientes actuales -->
+      <div class="reporte-seccion">
+        <h3>Pendientes actuales — para próximas compras</h3>
+        ${pendientes.length ? `
+          <table class="reporte-tabla">
+            <thead><tr><th>Producto</th><th>Tipo</th><th>Proveedor</th><th class="num">Cant. est.</th><th>Registrado</th></tr></thead>
+            <tbody>
+              ${pendientes.map(f => `
+                <tr>
+                  <td><strong>${f.nombre}</strong>${f.descripcion ? `<br><span style="font-size:.8rem;color:#888">${f.descripcion}</span>` : ''}</td>
+                  <td>${f.tipo || '—'}</td>
+                  <td>${f.proveedorNombre || '—'}</td>
+                  <td class="num">${f.cantidad_est}</td>
+                  <td style="font-size:.83rem;color:#666">${new Date(f.creado_en).toLocaleDateString('es-CO')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : '<p class="estado-info" style="color:#2e7d32">✅ No hay faltantes pendientes.</p>'}
+      </div>
+    `;
+  } catch (err) {
+    cont.innerHTML = `<p class="estado-info">Error: ${err.message}</p>`;
+  }
+}
+ 
+// ── Init ─────────────────────────────────────────────────────
+inicializarFechas();
+</script>
+</body>
+</html>
