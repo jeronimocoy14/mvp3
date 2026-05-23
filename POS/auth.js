@@ -3,7 +3,7 @@
 // Incluir ANTES que cualquier otro script en todas las páginas
 // ============================================================
 
-const BACKEND_URL  = 'http://localhost:3001';   // ← cambiar por tu URL de Render en producción
+const BACKEND_URL  = 'https://mvp3-ktgx.onrender.com';   // ← cambiar por tu URL de Render en producción
 const TOKEN_KEY    = 'pl_token';
 const USUARIO_KEY  = 'pl_usuario';
 
