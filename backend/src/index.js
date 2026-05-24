@@ -15,16 +15,7 @@ const origenesPermitidos = [
 ].filter(Boolean);
  
 app.use(cors({
-  origin: function(origin, callback) {
-    // Permitir peticiones sin origin (archivos locales, curl, Postman)
-    if (!origin) return callback(null, true);
-    if (origenesPermitidos.includes(origin)) return callback(null, true);
-    // En desarrollo, permitir cualquier localhost / 127.0.0.1
-    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error(`CORS no permitido para: ${origin}`));
-  },
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
